@@ -33,7 +33,6 @@
             src = ./.;
             subPackages = [ subPackage ];
             vendorHash = null;
-            CGO_ENABLED = 1;
             nativeBuildInputs = buildInputs;
             ldflags = [
               "-s"
