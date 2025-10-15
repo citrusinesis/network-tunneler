@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package tunneler;
+
+option go_package = "network-tunneler/proto";
+
+enum Protocol {
+  PROTOCOL_UNSPECIFIED = 0;
+  PROTOCOL_ICMP = 1;
+  PROTOCOL_TCP = 6;
+  PROTOCOL_UDP = 17;
+}
+
+enum Direction {
+  DIRECTION_UNSPECIFIED = 0;
+  DIRECTION_FORWARD = 1;   // Agent -> Server -> Target
+  DIRECTION_REVERSE = 2;   // Target -> Server -> Agent
+}
+
+message ConnectionInfo {
+  string src_ip = 1;
+  uint32 src_port = 2;
+  string dst_ip = 3;
+  uint32 dst_port = 4;
+}
+
+message Packet {
+  string connection_id = 1; 
+  bytes data = 2;           
+
+  ConnectionInfo conn_info = 3;
+
+  Protocol protocol = 4;
+  Direction direction = 5;
+  int64 timestamp = 6;
+}
