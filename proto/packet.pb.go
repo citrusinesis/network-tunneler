@@ -122,7 +122,7 @@ func (Direction) EnumDescriptor() ([]byte, []int) {
 	return file_proto_packet_proto_rawDescGZIP(), []int{1}
 }
 
-type ConnectionInfo struct {
+type ConnectionTuple struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	SrcIp         string                 `protobuf:"bytes,1,opt,name=src_ip,json=srcIp,proto3" json:"src_ip,omitempty"`
 	SrcPort       uint32                 `protobuf:"varint,2,opt,name=src_port,json=srcPort,proto3" json:"src_port,omitempty"`
@@ -132,20 +132,20 @@ type ConnectionInfo struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ConnectionInfo) Reset() {
-	*x = ConnectionInfo{}
+func (x *ConnectionTuple) Reset() {
+	*x = ConnectionTuple{}
 	mi := &file_proto_packet_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ConnectionInfo) String() string {
+func (x *ConnectionTuple) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ConnectionInfo) ProtoMessage() {}
+func (*ConnectionTuple) ProtoMessage() {}
 
-func (x *ConnectionInfo) ProtoReflect() protoreflect.Message {
+func (x *ConnectionTuple) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_packet_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -157,33 +157,33 @@ func (x *ConnectionInfo) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ConnectionInfo.ProtoReflect.Descriptor instead.
-func (*ConnectionInfo) Descriptor() ([]byte, []int) {
+// Deprecated: Use ConnectionTuple.ProtoReflect.Descriptor instead.
+func (*ConnectionTuple) Descriptor() ([]byte, []int) {
 	return file_proto_packet_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *ConnectionInfo) GetSrcIp() string {
+func (x *ConnectionTuple) GetSrcIp() string {
 	if x != nil {
 		return x.SrcIp
 	}
 	return ""
 }
 
-func (x *ConnectionInfo) GetSrcPort() uint32 {
+func (x *ConnectionTuple) GetSrcPort() uint32 {
 	if x != nil {
 		return x.SrcPort
 	}
 	return 0
 }
 
-func (x *ConnectionInfo) GetDstIp() string {
+func (x *ConnectionTuple) GetDstIp() string {
 	if x != nil {
 		return x.DstIp
 	}
 	return ""
 }
 
-func (x *ConnectionInfo) GetDstPort() uint32 {
+func (x *ConnectionTuple) GetDstPort() uint32 {
 	if x != nil {
 		return x.DstPort
 	}
@@ -194,9 +194,9 @@ type Packet struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ConnectionId  string                 `protobuf:"bytes,1,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
 	Data          []byte                 `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
-	ConnInfo      *ConnectionInfo        `protobuf:"bytes,3,opt,name=conn_info,json=connInfo,proto3" json:"conn_info,omitempty"`
-	Protocol      Protocol               `protobuf:"varint,4,opt,name=protocol,proto3,enum=tunneler.Protocol" json:"protocol,omitempty"`
-	Direction     Direction              `protobuf:"varint,5,opt,name=direction,proto3,enum=tunneler.Direction" json:"direction,omitempty"`
+	ConnTuple     *ConnectionTuple       `protobuf:"bytes,3,opt,name=conn_tuple,json=connTuple,proto3" json:"conn_tuple,omitempty"`
+	Protocol      Protocol               `protobuf:"varint,4,opt,name=protocol,proto3,enum=proto.Protocol" json:"protocol,omitempty"`
+	Direction     Direction              `protobuf:"varint,5,opt,name=direction,proto3,enum=proto.Direction" json:"direction,omitempty"`
 	Timestamp     int64                  `protobuf:"varint,6,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -246,9 +246,9 @@ func (x *Packet) GetData() []byte {
 	return nil
 }
 
-func (x *Packet) GetConnInfo() *ConnectionInfo {
+func (x *Packet) GetConnTuple() *ConnectionTuple {
 	if x != nil {
-		return x.ConnInfo
+		return x.ConnTuple
 	}
 	return nil
 }
@@ -278,18 +278,19 @@ var File_proto_packet_proto protoreflect.FileDescriptor
 
 const file_proto_packet_proto_rawDesc = "" +
 	"\n" +
-	"\x12proto/packet.proto\x12\btunneler\"t\n" +
-	"\x0eConnectionInfo\x12\x15\n" +
+	"\x12proto/packet.proto\x12\x05proto\"u\n" +
+	"\x0fConnectionTuple\x12\x15\n" +
 	"\x06src_ip\x18\x01 \x01(\tR\x05srcIp\x12\x19\n" +
 	"\bsrc_port\x18\x02 \x01(\rR\asrcPort\x12\x15\n" +
 	"\x06dst_ip\x18\x03 \x01(\tR\x05dstIp\x12\x19\n" +
-	"\bdst_port\x18\x04 \x01(\rR\adstPort\"\xf9\x01\n" +
+	"\bdst_port\x18\x04 \x01(\rR\adstPort\"\xf3\x01\n" +
 	"\x06Packet\x12#\n" +
 	"\rconnection_id\x18\x01 \x01(\tR\fconnectionId\x12\x12\n" +
 	"\x04data\x18\x02 \x01(\fR\x04data\x125\n" +
-	"\tconn_info\x18\x03 \x01(\v2\x18.tunneler.ConnectionInfoR\bconnInfo\x12.\n" +
-	"\bprotocol\x18\x04 \x01(\x0e2\x12.tunneler.ProtocolR\bprotocol\x121\n" +
-	"\tdirection\x18\x05 \x01(\x0e2\x13.tunneler.DirectionR\tdirection\x12\x1c\n" +
+	"\n" +
+	"conn_tuple\x18\x03 \x01(\v2\x16.proto.ConnectionTupleR\tconnTuple\x12+\n" +
+	"\bprotocol\x18\x04 \x01(\x0e2\x0f.proto.ProtocolR\bprotocol\x12.\n" +
+	"\tdirection\x18\x05 \x01(\x0e2\x10.proto.DirectionR\tdirection\x12\x1c\n" +
 	"\ttimestamp\x18\x06 \x01(\x03R\ttimestamp*[\n" +
 	"\bProtocol\x12\x18\n" +
 	"\x14PROTOCOL_UNSPECIFIED\x10\x00\x12\x11\n" +
@@ -316,15 +317,15 @@ func file_proto_packet_proto_rawDescGZIP() []byte {
 var file_proto_packet_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_proto_packet_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_proto_packet_proto_goTypes = []any{
-	(Protocol)(0),          // 0: tunneler.Protocol
-	(Direction)(0),         // 1: tunneler.Direction
-	(*ConnectionInfo)(nil), // 2: tunneler.ConnectionInfo
-	(*Packet)(nil),         // 3: tunneler.Packet
+	(Protocol)(0),           // 0: proto.Protocol
+	(Direction)(0),          // 1: proto.Direction
+	(*ConnectionTuple)(nil), // 2: proto.ConnectionTuple
+	(*Packet)(nil),          // 3: proto.Packet
 }
 var file_proto_packet_proto_depIdxs = []int32{
-	2, // 0: tunneler.Packet.conn_info:type_name -> tunneler.ConnectionInfo
-	0, // 1: tunneler.Packet.protocol:type_name -> tunneler.Protocol
-	1, // 2: tunneler.Packet.direction:type_name -> tunneler.Direction
+	2, // 0: proto.Packet.conn_tuple:type_name -> proto.ConnectionTuple
+	0, // 1: proto.Packet.protocol:type_name -> proto.Protocol
+	1, // 2: proto.Packet.direction:type_name -> proto.Direction
 	3, // [3:3] is the sub-list for method output_type
 	3, // [3:3] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package tunneler;
+package proto;
 
 option go_package = "network-tunneler/proto";
 
@@ -17,7 +17,7 @@ enum Direction {
   DIRECTION_REVERSE = 2;   // Target -> Server -> Agent
 }
 
-message ConnectionInfo {
+message ConnectionTuple {
   string src_ip = 1;
   uint32 src_port = 2;
   string dst_ip = 3;
@@ -25,10 +25,10 @@ message ConnectionInfo {
 }
 
 message Packet {
-  string connection_id = 1; 
-  bytes data = 2;           
+  string connection_id = 1;
+  bytes data = 2;
 
-  ConnectionInfo conn_info = 3;
+  ConnectionTuple conn_tuple = 3;
 
   Protocol protocol = 4;
   Direction direction = 5;
