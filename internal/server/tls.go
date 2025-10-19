@@ -3,22 +3,13 @@ package server
 import (
 	"crypto/tls"
 	"crypto/x509"
-	_ "embed"
 	"fmt"
 	"os"
 
+	"network-tunneler/internal/certs"
 	"network-tunneler/internal/config"
 	"network-tunneler/pkg/logger"
 )
-
-//go:embed certs/server.crt
-var embeddedCert []byte
-
-//go:embed certs/server.key
-var embeddedKey []byte
-
-//go:embed certs/ca.crt
-var embeddedCA []byte
 
 type TLSManager struct {
 	cfg    *config.TLSConfig
@@ -69,7 +60,7 @@ func (t *TLSManager) loadCertificate() (tls.Certificate, error) {
 	}
 
 	t.logger.Debug("loading TLS certificate from embedded data")
-	cert, err := tls.X509KeyPair(embeddedCert, embeddedKey)
+	cert, err := tls.X509KeyPair([]byte(certs.ServerCert), []byte(certs.ServerKey))
 	if err != nil {
 		return tls.Certificate{}, fmt.Errorf("failed to load embedded server certificate: %w", err)
 	}
@@ -90,7 +81,7 @@ func (t *TLSManager) loadCAPool() (*x509.CertPool, error) {
 		}
 	} else {
 		t.logger.Debug("loading CA certificate from embedded data")
-		caPEM = embeddedCA
+		caPEM = []byte(certs.CACert)
 	}
 
 	caPool := x509.NewCertPool()

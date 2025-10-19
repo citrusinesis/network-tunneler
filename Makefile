@@ -1,8 +1,9 @@
-.PHONY: help build clean test fmt lint run-agent run-server run-implant docker-build proto
+.PHONY: help build clean test fmt lint run-agent run-server run-implant docker-build proto gencerts
 
 help:
 	@echo "Network Tunneler - Available targets:"
 	@echo "  proto         - Generate protobuf Go code"
+	@echo "  gencerts      - Generate TLS certificates"
 	@echo "  build         - Build all binaries"
 	@echo "  clean         - Clean build artifacts"
 	@echo "  test          - Run tests"
@@ -17,6 +18,10 @@ proto:
 	@echo "Generating protobuf code..."
 	protoc --go_out=. --go_opt=paths=source_relative \
 		proto/packet.proto
+
+gencerts:
+	@echo "Generating TLS certificates..."
+	go run ./cmd/gencerts
 
 clean:
 	@echo "Cleaning build artifacts..."

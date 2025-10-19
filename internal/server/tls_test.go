@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"network-tunneler/internal/certs"
 	"network-tunneler/internal/config"
 	testutil "network-tunneler/internal/testing"
 )
@@ -47,13 +48,13 @@ func TestTLSManager_LoadConfig_FromFiles(t *testing.T) {
 	keyPath := filepath.Join(tmpDir, "test.key")
 	caPath := filepath.Join(tmpDir, "ca.crt")
 
-	if err := os.WriteFile(certPath, embeddedCert, 0644); err != nil {
+	if err := os.WriteFile(certPath, []byte(certs.ServerCert), 0644); err != nil {
 		t.Fatalf("failed to write cert: %v", err)
 	}
-	if err := os.WriteFile(keyPath, embeddedKey, 0600); err != nil {
+	if err := os.WriteFile(keyPath, []byte(certs.ServerKey), 0600); err != nil {
 		t.Fatalf("failed to write key: %v", err)
 	}
-	if err := os.WriteFile(caPath, embeddedCA, 0644); err != nil {
+	if err := os.WriteFile(caPath, []byte(certs.CACert), 0644); err != nil {
 		t.Fatalf("failed to write CA: %v", err)
 	}
 
