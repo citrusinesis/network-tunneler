@@ -1,8 +1,16 @@
 package config
 
 import (
+	"fmt"
+
 	"network-tunneler/pkg/logger"
 )
+
+type Config interface {
+	Validate() error
+	GetTLS() *TLSConfig
+	GetLog() *LogConfig
+}
 
 type TLSConfig struct {
 	CertPath           string `mapstructure:"cert_path" json:"cert_path" yaml:"cert_path"`
@@ -40,4 +48,51 @@ func DevelopmentLogConfig() LogConfig {
 		Format:      logger.FormatConsole,
 		Development: true,
 	}
+}
+
+func DefaultTLSConfig(component string) TLSConfig {
+	return TLSConfig{
+		CertPath:           fmt.Sprintf("certs/%s.crt", component),
+		KeyPath:            fmt.Sprintf("certs/%s.key", component),
+		CAPath:             "certs/ca.crt",
+		InsecureSkipVerify: false,
+	}
+}
+
+func Load(appName string, configFile string, cfg Config) error {
+	loader := NewLoader(appName)
+
+	if err := loader.LoadFile(configFile); err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	if err := loader.Unmarshal(cfg); err != nil {
+		return fmt.Errorf("failed to unmarshal config: %w", err)
+	}
+
+	if err := cfg.Validate(); err != nil {
+		return fmt.Errorf("invalid configuration: %w", err)
+	}
+
+	return nil
+}
+
+func LoadMultiple(appName string, configFiles []string, cfg Config) error {
+	loader := NewLoader(appName)
+
+	for _, file := range configFiles {
+		if err := loader.LoadFile(file); err != nil {
+			return fmt.Errorf("failed to load %s: %w", file, err)
+		}
+	}
+
+	if err := loader.Unmarshal(cfg); err != nil {
+		return fmt.Errorf("failed to unmarshal config: %w", err)
+	}
+
+	if err := cfg.Validate(); err != nil {
+		return fmt.Errorf("invalid configuration: %w", err)
+	}
+
+	return nil
 }

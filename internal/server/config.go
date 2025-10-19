@@ -17,36 +17,24 @@ func DefaultConfig() *Config {
 	return &Config{
 		AgentListenAddr:   ":8080",
 		ImplantListenAddr: ":8081",
-		TLS: config.TLSConfig{
-			CertPath:           "certs/server.crt",
-			KeyPath:            "certs/server.key",
-			CAPath:             "certs/ca.crt",
-			InsecureSkipVerify: false,
-		},
-		Log: config.DefaultLogConfig(),
+		TLS:               config.DefaultTLSConfig("server"),
+		Log:               config.DefaultLogConfig(),
 	}
 }
 
-func LoadConfig(configFile, envFile string) (*Config, error) {
-	loader := config.NewLoader("server")
-
-	if err := loader.LoadEnvFile(envFile); err != nil {
-		return nil, fmt.Errorf("failed to load .env: %w", err)
-	}
-
-	if err := loader.LoadFile(configFile); err != nil {
-		return nil, fmt.Errorf("failed to load config file: %w", err)
-	}
-
+func LoadConfig(configFile string) (*Config, error) {
 	cfg := DefaultConfig()
-	if err := loader.Unmarshal(cfg); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+	if err := config.Load("server", configFile, cfg); err != nil {
+		return nil, err
 	}
+	return cfg, nil
+}
 
-	if err := cfg.Validate(); err != nil {
-		return nil, fmt.Errorf("invalid configuration: %w", err)
+func LoadConfigMultiple(configFiles ...string) (*Config, error) {
+	cfg := DefaultConfig()
+	if err := config.LoadMultiple("server", configFiles, cfg); err != nil {
+		return nil, err
 	}
-
 	return cfg, nil
 }
 
@@ -61,4 +49,12 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("agent and implant listen addresses must be different")
 	}
 	return nil
+}
+
+func (c *Config) GetTLS() *config.TLSConfig {
+	return &c.TLS
+}
+
+func (c *Config) GetLog() *config.LogConfig {
+	return &c.Log
 }

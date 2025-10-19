@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 
@@ -28,11 +29,24 @@ func NewLoader(appName string) *Loader {
 	}
 }
 
-func (l *Loader) LoadEnvFile(filepath string) error {
+func (l *Loader) LoadFile(filepath string) error {
 	if filepath == "" {
 		return nil
 	}
 
+	if isEnvFile(filepath) {
+		return l.loadEnvFile(filepath)
+	}
+
+	return l.loadConfigFile(filepath)
+}
+
+func isEnvFile(path string) bool {
+	base := filepath.Base(path)
+	return strings.HasPrefix(base, ".env") || strings.HasSuffix(base, ".env")
+}
+
+func (l *Loader) loadEnvFile(filepath string) error {
 	if _, err := os.Stat(filepath); os.IsNotExist(err) {
 		return nil
 	}
@@ -51,11 +65,7 @@ func (l *Loader) LoadEnvFile(filepath string) error {
 	return nil
 }
 
-func (l *Loader) LoadFile(filepath string) error {
-	if filepath == "" {
-		return nil
-	}
-
+func (l *Loader) loadConfigFile(filepath string) error {
 	l.v.SetConfigFile(filepath)
 	if err := l.v.ReadInConfig(); err != nil {
 		return fmt.Errorf("failed to read config file: %w", err)
@@ -64,12 +74,12 @@ func (l *Loader) LoadFile(filepath string) error {
 	return nil
 }
 
-func (l *Loader) Unmarshal(cfg interface{}) error {
+func (l *Loader) Unmarshal(cfg any) error {
 	l.bindEnvs(cfg, "")
 	return l.v.Unmarshal(cfg)
 }
 
-func (l *Loader) bindEnvs(iface interface{}, prefix string) {
+func (l *Loader) bindEnvs(iface any, prefix string) {
 	v := reflect.ValueOf(iface)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
@@ -104,10 +114,10 @@ func (l *Loader) bindEnvs(iface interface{}, prefix string) {
 	}
 }
 
-func (l *Loader) Set(key string, value interface{}) {
+func (l *Loader) Set(key string, value any) {
 	l.v.Set(key, value)
 }
 
-func (l *Loader) Get(key string) interface{} {
+func (l *Loader) Get(key string) any {
 	return l.v.Get(key)
 }

@@ -19,36 +19,24 @@ func DefaultConfig() *Config {
 		ServerAddr:  "localhost:8081",
 		ImplantID:   "implant-1",
 		ManagedCIDR: "192.168.1.0/24",
-		TLS: config.TLSConfig{
-			CertPath:           "certs/implant.crt",
-			KeyPath:            "certs/implant.key",
-			CAPath:             "certs/ca.crt",
-			InsecureSkipVerify: false,
-		},
-		Log: config.DefaultLogConfig(),
+		TLS:         config.DefaultTLSConfig("implant"),
+		Log:         config.DefaultLogConfig(),
 	}
 }
 
-func LoadConfig(configFile, envFile string) (*Config, error) {
-	loader := config.NewLoader("implant")
-
-	if err := loader.LoadEnvFile(envFile); err != nil {
-		return nil, fmt.Errorf("failed to load .env: %w", err)
-	}
-
-	if err := loader.LoadFile(configFile); err != nil {
-		return nil, fmt.Errorf("failed to load config file: %w", err)
-	}
-
+func LoadConfig(configFile string) (*Config, error) {
 	cfg := DefaultConfig()
-	if err := loader.Unmarshal(cfg); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+	if err := config.Load("implant", configFile, cfg); err != nil {
+		return nil, err
 	}
+	return cfg, nil
+}
 
-	if err := cfg.Validate(); err != nil {
-		return nil, fmt.Errorf("invalid configuration: %w", err)
+func LoadConfigMultiple(configFiles ...string) (*Config, error) {
+	cfg := DefaultConfig()
+	if err := config.LoadMultiple("implant", configFiles, cfg); err != nil {
+		return nil, err
 	}
-
 	return cfg, nil
 }
 
@@ -63,4 +51,12 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("managed CIDR is required")
 	}
 	return nil
+}
+
+func (c *Config) GetTLS() *config.TLSConfig {
+	return &c.TLS
+}
+
+func (c *Config) GetLog() *config.LogConfig {
+	return &c.Log
 }
