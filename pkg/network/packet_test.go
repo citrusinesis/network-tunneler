@@ -294,7 +294,6 @@ func TestIPPacketWithPayload(t *testing.T) {
 		t.Fatalf("Failed to parse TCP: %v", err)
 	}
 
-	// Verify
 	if parsedTCP.SrcPort != 80 {
 		t.Errorf("TCP SrcPort = %d, want 80", parsedTCP.SrcPort)
 	}

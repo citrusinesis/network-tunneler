@@ -52,9 +52,9 @@ func DevelopmentLogConfig() LogConfig {
 
 func DefaultTLSConfig(component string) TLSConfig {
 	return TLSConfig{
-		CertPath:           fmt.Sprintf("certs/%s.crt", component),
-		KeyPath:            fmt.Sprintf("certs/%s.key", component),
-		CAPath:             "certs/ca.crt",
+		CertPath:           "", // Empty = use embedded certificates
+		KeyPath:            "", // Empty = use embedded keys
+		CAPath:             "", // Empty = use embedded CA
 		InsecureSkipVerify: false,
 	}
 }

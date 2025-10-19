@@ -32,6 +32,12 @@ func TestIsEnvFile(t *testing.T) {
 }
 
 func TestLoaderEnvFile(t *testing.T) {
+	t.Cleanup(func() {
+		os.Unsetenv("TEST_VALUE")
+		os.Unsetenv("TEST_NUMBER")
+		os.Unsetenv("TEST_BOOL")
+	})
+
 	tmpDir := t.TempDir()
 	envPath := filepath.Join(tmpDir, ".env")
 
@@ -116,6 +122,13 @@ func TestLoaderJSONFile(t *testing.T) {
 }
 
 func TestLoaderMultipleFiles(t *testing.T) {
+	t.Cleanup(func() {
+		os.Unsetenv("TEST_PORT")
+		os.Unsetenv("TEST_ENABLED")
+		os.Unsetenv("TEST_SERVER_ADDR")
+		os.Unsetenv("TEST_TIMEOUT")
+	})
+
 	tmpDir := t.TempDir()
 
 	yamlPath := filepath.Join(tmpDir, "base.yaml")

@@ -151,6 +151,12 @@ func TestLoadConfig_JSON(t *testing.T) {
 }
 
 func TestLoadConfig_DotEnv(t *testing.T) {
+	t.Cleanup(func() {
+		os.Unsetenv("AGENT_SERVER_ADDR")
+		os.Unsetenv("AGENT_LISTEN_PORT")
+		os.Unsetenv("AGENT_TARGET_CIDR")
+	})
+
 	tmpDir := t.TempDir()
 	envPath := filepath.Join(tmpDir, ".env")
 
@@ -181,6 +187,12 @@ AGENT_TARGET_CIDR=192.168.0.0/16
 }
 
 func TestLoadConfigMultiple(t *testing.T) {
+	t.Cleanup(func() {
+		os.Unsetenv("AGENT_SERVER_ADDR")
+		os.Unsetenv("AGENT_LISTEN_PORT")
+		os.Unsetenv("AGENT_TARGET_CIDR")
+	})
+
 	tmpDir := t.TempDir()
 
 	yamlPath := filepath.Join(tmpDir, "config.yaml")
