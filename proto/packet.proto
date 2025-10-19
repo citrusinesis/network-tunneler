@@ -17,6 +17,15 @@ enum Direction {
   DIRECTION_REVERSE = 2;   // Target -> Server -> Agent
 }
 
+enum MessageType {
+  MESSAGE_TYPE_UNSPECIFIED = 0;
+  AGENT_REGISTER = 1;
+  IMPLANT_REGISTER = 2;
+  REGISTER_ACK = 3;
+  PACKET = 4;
+  HEARTBEAT = 5;
+}
+
 message ConnectionTuple {
   string src_ip = 1;
   uint32 src_port = 2;
@@ -33,4 +42,23 @@ message Packet {
   Protocol protocol = 4;
   Direction direction = 5;
   int64 timestamp = 6;
+}
+
+message AgentRegister {
+  string agent_id = 1;
+}
+
+message ImplantRegister {
+  string implant_id = 1;
+  string managed_cidr = 2;
+}
+
+message RegisterAck {
+  bool success = 1;
+  string message = 2;
+}
+
+message Heartbeat {
+  string sender_id = 1;
+  int64 timestamp = 2;
 }

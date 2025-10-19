@@ -122,6 +122,64 @@ func (Direction) EnumDescriptor() ([]byte, []int) {
 	return file_proto_packet_proto_rawDescGZIP(), []int{1}
 }
 
+type MessageType int32
+
+const (
+	MessageType_MESSAGE_TYPE_UNSPECIFIED MessageType = 0
+	MessageType_AGENT_REGISTER           MessageType = 1
+	MessageType_IMPLANT_REGISTER         MessageType = 2
+	MessageType_REGISTER_ACK             MessageType = 3
+	MessageType_PACKET                   MessageType = 4
+	MessageType_HEARTBEAT                MessageType = 5
+)
+
+// Enum value maps for MessageType.
+var (
+	MessageType_name = map[int32]string{
+		0: "MESSAGE_TYPE_UNSPECIFIED",
+		1: "AGENT_REGISTER",
+		2: "IMPLANT_REGISTER",
+		3: "REGISTER_ACK",
+		4: "PACKET",
+		5: "HEARTBEAT",
+	}
+	MessageType_value = map[string]int32{
+		"MESSAGE_TYPE_UNSPECIFIED": 0,
+		"AGENT_REGISTER":           1,
+		"IMPLANT_REGISTER":         2,
+		"REGISTER_ACK":             3,
+		"PACKET":                   4,
+		"HEARTBEAT":                5,
+	}
+)
+
+func (x MessageType) Enum() *MessageType {
+	p := new(MessageType)
+	*p = x
+	return p
+}
+
+func (x MessageType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (MessageType) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_packet_proto_enumTypes[2].Descriptor()
+}
+
+func (MessageType) Type() protoreflect.EnumType {
+	return &file_proto_packet_proto_enumTypes[2]
+}
+
+func (x MessageType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use MessageType.Descriptor instead.
+func (MessageType) EnumDescriptor() ([]byte, []int) {
+	return file_proto_packet_proto_rawDescGZIP(), []int{2}
+}
+
 type ConnectionTuple struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	SrcIp         string                 `protobuf:"bytes,1,opt,name=src_ip,json=srcIp,proto3" json:"src_ip,omitempty"`
@@ -274,6 +332,206 @@ func (x *Packet) GetTimestamp() int64 {
 	return 0
 }
 
+type AgentRegister struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AgentId       string                 `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AgentRegister) Reset() {
+	*x = AgentRegister{}
+	mi := &file_proto_packet_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AgentRegister) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AgentRegister) ProtoMessage() {}
+
+func (x *AgentRegister) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_packet_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AgentRegister.ProtoReflect.Descriptor instead.
+func (*AgentRegister) Descriptor() ([]byte, []int) {
+	return file_proto_packet_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *AgentRegister) GetAgentId() string {
+	if x != nil {
+		return x.AgentId
+	}
+	return ""
+}
+
+type ImplantRegister struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ImplantId     string                 `protobuf:"bytes,1,opt,name=implant_id,json=implantId,proto3" json:"implant_id,omitempty"`
+	ManagedCidr   string                 `protobuf:"bytes,2,opt,name=managed_cidr,json=managedCidr,proto3" json:"managed_cidr,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ImplantRegister) Reset() {
+	*x = ImplantRegister{}
+	mi := &file_proto_packet_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ImplantRegister) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ImplantRegister) ProtoMessage() {}
+
+func (x *ImplantRegister) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_packet_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ImplantRegister.ProtoReflect.Descriptor instead.
+func (*ImplantRegister) Descriptor() ([]byte, []int) {
+	return file_proto_packet_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ImplantRegister) GetImplantId() string {
+	if x != nil {
+		return x.ImplantId
+	}
+	return ""
+}
+
+func (x *ImplantRegister) GetManagedCidr() string {
+	if x != nil {
+		return x.ManagedCidr
+	}
+	return ""
+}
+
+type RegisterAck struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RegisterAck) Reset() {
+	*x = RegisterAck{}
+	mi := &file_proto_packet_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RegisterAck) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RegisterAck) ProtoMessage() {}
+
+func (x *RegisterAck) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_packet_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RegisterAck.ProtoReflect.Descriptor instead.
+func (*RegisterAck) Descriptor() ([]byte, []int) {
+	return file_proto_packet_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *RegisterAck) GetSuccess() bool {
+	if x != nil {
+		return x.Success
+	}
+	return false
+}
+
+func (x *RegisterAck) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+type Heartbeat struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SenderId      string                 `protobuf:"bytes,1,opt,name=sender_id,json=senderId,proto3" json:"sender_id,omitempty"`
+	Timestamp     int64                  `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Heartbeat) Reset() {
+	*x = Heartbeat{}
+	mi := &file_proto_packet_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Heartbeat) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Heartbeat) ProtoMessage() {}
+
+func (x *Heartbeat) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_packet_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Heartbeat.ProtoReflect.Descriptor instead.
+func (*Heartbeat) Descriptor() ([]byte, []int) {
+	return file_proto_packet_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *Heartbeat) GetSenderId() string {
+	if x != nil {
+		return x.SenderId
+	}
+	return ""
+}
+
+func (x *Heartbeat) GetTimestamp() int64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
 var File_proto_packet_proto protoreflect.FileDescriptor
 
 const file_proto_packet_proto_rawDesc = "" +
@@ -291,7 +549,19 @@ const file_proto_packet_proto_rawDesc = "" +
 	"conn_tuple\x18\x03 \x01(\v2\x16.proto.ConnectionTupleR\tconnTuple\x12+\n" +
 	"\bprotocol\x18\x04 \x01(\x0e2\x0f.proto.ProtocolR\bprotocol\x12.\n" +
 	"\tdirection\x18\x05 \x01(\x0e2\x10.proto.DirectionR\tdirection\x12\x1c\n" +
-	"\ttimestamp\x18\x06 \x01(\x03R\ttimestamp*[\n" +
+	"\ttimestamp\x18\x06 \x01(\x03R\ttimestamp\"*\n" +
+	"\rAgentRegister\x12\x19\n" +
+	"\bagent_id\x18\x01 \x01(\tR\aagentId\"S\n" +
+	"\x0fImplantRegister\x12\x1d\n" +
+	"\n" +
+	"implant_id\x18\x01 \x01(\tR\timplantId\x12!\n" +
+	"\fmanaged_cidr\x18\x02 \x01(\tR\vmanagedCidr\"A\n" +
+	"\vRegisterAck\x12\x18\n" +
+	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"F\n" +
+	"\tHeartbeat\x12\x1b\n" +
+	"\tsender_id\x18\x01 \x01(\tR\bsenderId\x12\x1c\n" +
+	"\ttimestamp\x18\x02 \x01(\x03R\ttimestamp*[\n" +
 	"\bProtocol\x12\x18\n" +
 	"\x14PROTOCOL_UNSPECIFIED\x10\x00\x12\x11\n" +
 	"\rPROTOCOL_ICMP\x10\x01\x12\x10\n" +
@@ -300,7 +570,15 @@ const file_proto_packet_proto_rawDesc = "" +
 	"\tDirection\x12\x19\n" +
 	"\x15DIRECTION_UNSPECIFIED\x10\x00\x12\x15\n" +
 	"\x11DIRECTION_FORWARD\x10\x01\x12\x15\n" +
-	"\x11DIRECTION_REVERSE\x10\x02B\x18Z\x16network-tunneler/protob\x06proto3"
+	"\x11DIRECTION_REVERSE\x10\x02*\x82\x01\n" +
+	"\vMessageType\x12\x1c\n" +
+	"\x18MESSAGE_TYPE_UNSPECIFIED\x10\x00\x12\x12\n" +
+	"\x0eAGENT_REGISTER\x10\x01\x12\x14\n" +
+	"\x10IMPLANT_REGISTER\x10\x02\x12\x10\n" +
+	"\fREGISTER_ACK\x10\x03\x12\n" +
+	"\n" +
+	"\x06PACKET\x10\x04\x12\r\n" +
+	"\tHEARTBEAT\x10\x05B\x18Z\x16network-tunneler/protob\x06proto3"
 
 var (
 	file_proto_packet_proto_rawDescOnce sync.Once
@@ -314,16 +592,21 @@ func file_proto_packet_proto_rawDescGZIP() []byte {
 	return file_proto_packet_proto_rawDescData
 }
 
-var file_proto_packet_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_proto_packet_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_proto_packet_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_proto_packet_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_proto_packet_proto_goTypes = []any{
 	(Protocol)(0),           // 0: proto.Protocol
 	(Direction)(0),          // 1: proto.Direction
-	(*ConnectionTuple)(nil), // 2: proto.ConnectionTuple
-	(*Packet)(nil),          // 3: proto.Packet
+	(MessageType)(0),        // 2: proto.MessageType
+	(*ConnectionTuple)(nil), // 3: proto.ConnectionTuple
+	(*Packet)(nil),          // 4: proto.Packet
+	(*AgentRegister)(nil),   // 5: proto.AgentRegister
+	(*ImplantRegister)(nil), // 6: proto.ImplantRegister
+	(*RegisterAck)(nil),     // 7: proto.RegisterAck
+	(*Heartbeat)(nil),       // 8: proto.Heartbeat
 }
 var file_proto_packet_proto_depIdxs = []int32{
-	2, // 0: proto.Packet.conn_tuple:type_name -> proto.ConnectionTuple
+	3, // 0: proto.Packet.conn_tuple:type_name -> proto.ConnectionTuple
 	0, // 1: proto.Packet.protocol:type_name -> proto.Protocol
 	1, // 2: proto.Packet.direction:type_name -> proto.Direction
 	3, // [3:3] is the sub-list for method output_type
@@ -343,8 +626,8 @@ func file_proto_packet_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_packet_proto_rawDesc), len(file_proto_packet_proto_rawDesc)),
-			NumEnums:      2,
-			NumMessages:   2,
+			NumEnums:      3,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
