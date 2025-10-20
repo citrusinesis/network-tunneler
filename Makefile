@@ -1,4 +1,4 @@
-.PHONY: help proto gencerts build build-dev clean test test-race test-short test-coverage fmt vet lint
+.PHONY: help proto gencerts build build-dev build-debug build-release clean test test-race test-short test-coverage fmt vet lint
 .PHONY: run-agent run-server run-implant install tools
 .PHONY: docker-build docker-agent docker-server docker-implant
 .PHONY: all
@@ -11,10 +11,18 @@ VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev
 COMMIT := $(shell git rev-parse --short HEAD 2>/dev/null || echo "none")
 BUILD_TIME := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 
-LDFLAGS := -s -w \
+LDFLAGS_BASE := \
 	-X 'network-tunneler/internal/version.Version=$(VERSION)' \
 	-X 'network-tunneler/internal/version.Commit=$(COMMIT)' \
 	-X 'network-tunneler/internal/version.BuildTime=$(BUILD_TIME)'
+
+LDFLAGS_DEBUG := $(LDFLAGS_BASE) \
+	-X 'network-tunneler/internal/version.Debug=true'
+
+LDFLAGS_RELEASE := -s -w $(LDFLAGS_BASE) \
+	-X 'network-tunneler/internal/version.Debug=false'
+
+LDFLAGS := $(LDFLAGS_DEBUG)
 
 AGENT_BIN := $(BINARY_DIR)/agent
 SERVER_BIN := $(BINARY_DIR)/server
@@ -29,7 +37,9 @@ help:
 	@echo "Build & Development:"
 	@echo "  all           - Generate proto + build all binaries"
 	@echo "  build         - Build all binaries with Nix (optimized)"
-	@echo "  build-dev     - Quick development build without Nix"
+	@echo "  build-dev     - Quick development build (debug mode, default)"
+	@echo "  build-debug   - Debug build with symbols and debug flag"
+	@echo "  build-release - Release build (stripped, optimized)"
 	@echo "  proto         - Generate protobuf Go code"
 	@echo "  gencerts      - Generate TLS certificates"
 	@echo "  clean         - Clean build artifacts and caches"
@@ -74,13 +84,23 @@ build:
 	nix build .#default
 	@echo "==> Build complete"
 
-build-dev: $(BINARY_DIR)
-	@echo "==> Building binaries (development)..."
-	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(AGENT_BIN) ./cmd/agent
-	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(SERVER_BIN) ./cmd/server
-	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(IMPLANT_BIN) ./cmd/implant
-	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS)" -o $(GENCERTS_BIN) ./cmd/gencerts
-	@echo "==> Development build complete"
+build-dev: build-debug
+
+build-debug: $(BINARY_DIR)
+	@echo "==> Building binaries (debug mode)..."
+	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS_DEBUG)" -o $(AGENT_BIN) ./cmd/agent
+	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS_DEBUG)" -o $(SERVER_BIN) ./cmd/server
+	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS_DEBUG)" -o $(IMPLANT_BIN) ./cmd/implant
+	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS_DEBUG)" -o $(GENCERTS_BIN) ./cmd/gencerts
+	@echo "==> Debug build complete"
+
+build-release: $(BINARY_DIR)
+	@echo "==> Building binaries (release mode)..."
+	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS_RELEASE)" -o $(AGENT_BIN) ./cmd/agent
+	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS_RELEASE)" -o $(SERVER_BIN) ./cmd/server
+	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS_RELEASE)" -o $(IMPLANT_BIN) ./cmd/implant
+	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS_RELEASE)" -o $(GENCERTS_BIN) ./cmd/gencerts
+	@echo "==> Release build complete"
 
 $(BINARY_DIR):
 	@mkdir -p $(BINARY_DIR)
