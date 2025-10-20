@@ -3,6 +3,7 @@ package testing
 import (
 	"bytes"
 	"net"
+	"sync"
 	"time"
 
 	"network-tunneler/pkg/logger"
@@ -32,6 +33,7 @@ type MockNetConn struct {
 	Closed        bool
 	LocalAddress  net.Addr
 	RemoteAddress net.Addr
+	mu            sync.Mutex
 }
 
 func NewMockNetConn() *MockNetConn {
@@ -52,6 +54,8 @@ func (m *MockNetConn) Write(b []byte) (n int, err error) {
 }
 
 func (m *MockNetConn) Close() error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.Closed = true
 	return nil
 }
