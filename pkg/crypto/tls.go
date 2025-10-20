@@ -4,36 +4,56 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-
-	"network-tunneler/internal/certs"
-	"network-tunneler/internal/config"
+	"os"
 )
 
-func LoadTLSConfig(cfg *config.TLSConfig) (*tls.Config, error) {
+func readFile(path string) ([]byte, error) {
+	return os.ReadFile(path)
+}
+
+type TLSOptions struct {
+	CertPath string `mapstructure:"cert_path" json:"cert_path" yaml:"cert_path"`
+	KeyPath  string `mapstructure:"key_path" json:"key_path" yaml:"key_path"`
+	CAPath   string `mapstructure:"ca_path" json:"ca_path" yaml:"ca_path"`
+
+	// Embedded/inline certificates (used as fallback)
+	CertPEM []byte `mapstructure:"cert_pem" json:"cert_pem,omitempty" yaml:"cert_pem,omitempty"`
+	KeyPEM  []byte `mapstructure:"key_pem" json:"key_pem,omitempty" yaml:"key_pem,omitempty"`
+	CAPEM   []byte `mapstructure:"ca_pem" json:"ca_pem,omitempty" yaml:"ca_pem,omitempty"`
+
+	ServerName         string `mapstructure:"server_name" json:"server_name" yaml:"server_name"`
+	InsecureSkipVerify bool   `mapstructure:"insecure_skip_verify" json:"insecure_skip_verify" yaml:"insecure_skip_verify"`
+}
+
+func LoadTLSConfig(opts TLSOptions) (*tls.Config, error) {
 	var cert tls.Certificate
 	var err error
 
-	if cfg.CertPath != "" && cfg.KeyPath != "" {
-		cert, err = tls.LoadX509KeyPair(cfg.CertPath, cfg.KeyPath)
+	if opts.CertPath != "" && opts.KeyPath != "" {
+		cert, err = tls.LoadX509KeyPair(opts.CertPath, opts.KeyPath)
 		if err != nil {
-			return nil, fmt.Errorf("failed to load certificate: %w", err)
+			return nil, fmt.Errorf("failed to load certificate from files: %w", err)
 		}
-	} else {
-		cert, err = tls.X509KeyPair([]byte(certs.ClientCert), []byte(certs.ClientKey))
+	} else if len(opts.CertPEM) > 0 && len(opts.KeyPEM) > 0 {
+		cert, err = tls.X509KeyPair(opts.CertPEM, opts.KeyPEM)
 		if err != nil {
 			return nil, fmt.Errorf("failed to load embedded certificate: %w", err)
 		}
+	} else {
+		return nil, fmt.Errorf("no certificate provided (need either file paths or PEM data)")
 	}
 
 	var caCertPEM []byte
-	if cfg.CAPath != "" {
-		caCert, err := LoadCA(cfg.CAPath, "")
+	if opts.CAPath != "" {
+		var err error
+		caCertPEM, err = readFile(opts.CAPath)
 		if err != nil {
-			return nil, fmt.Errorf("failed to load CA: %w", err)
+			return nil, fmt.Errorf("failed to load CA from file: %w", err)
 		}
-		caCertPEM = caCert.Cert.Raw
+	} else if len(opts.CAPEM) > 0 {
+		caCertPEM = opts.CAPEM
 	} else {
-		caCertPEM = []byte(certs.CACert)
+		return nil, fmt.Errorf("no CA certificate provided (need either file path or PEM data)")
 	}
 
 	caPool := x509.NewCertPool()
@@ -46,14 +66,18 @@ func LoadTLSConfig(cfg *config.TLSConfig) (*tls.Config, error) {
 		RootCAs:            caPool,
 		ClientCAs:          caPool,
 		MinVersion:         tls.VersionTLS13,
-		InsecureSkipVerify: cfg.InsecureSkipVerify,
+		InsecureSkipVerify: opts.InsecureSkipVerify,
+	}
+
+	if opts.ServerName != "" {
+		tlsConfig.ServerName = opts.ServerName
 	}
 
 	return tlsConfig, nil
 }
 
-func LoadServerTLSConfig(cfg *config.TLSConfig) (*tls.Config, error) {
-	tlsConfig, err := LoadTLSConfig(cfg)
+func LoadServerTLSConfig(opts TLSOptions) (*tls.Config, error) {
+	tlsConfig, err := LoadTLSConfig(opts)
 	if err != nil {
 		return nil, err
 	}
@@ -63,15 +87,6 @@ func LoadServerTLSConfig(cfg *config.TLSConfig) (*tls.Config, error) {
 	return tlsConfig, nil
 }
 
-func LoadClientTLSConfig(cfg *config.TLSConfig) (*tls.Config, error) {
-	tlsConfig, err := LoadTLSConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	if cfg.ServerName != "" {
-		tlsConfig.ServerName = cfg.ServerName
-	}
-
-	return tlsConfig, nil
+func LoadClientTLSConfig(opts TLSOptions) (*tls.Config, error) {
+	return LoadTLSConfig(opts)
 }

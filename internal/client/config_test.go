@@ -186,44 +186,5 @@ CLIENT_TARGET_CIDR=192.168.0.0/16
 	}
 }
 
-func TestLoadConfigMultiple(t *testing.T) {
-	t.Cleanup(func() {
-		os.Unsetenv("CLIENT_SERVER_ADDR")
-		os.Unsetenv("CLIENT_LISTEN_PORT")
-		os.Unsetenv("CLIENT_TARGET_CIDR")
-	})
-
-	tmpDir := t.TempDir()
-
-	yamlPath := filepath.Join(tmpDir, "config.yaml")
-	yamlContent := `
-server_addr: "yaml.example.com:8080"
-listen_port: 1111
-`
-	if err := os.WriteFile(yamlPath, []byte(yamlContent), 0644); err != nil {
-		t.Fatalf("failed to write yaml: %v", err)
-	}
-
-	envPath := filepath.Join(tmpDir, ".env")
-	envContent := `CLIENT_LISTEN_PORT=2222
-CLIENT_TARGET_CIDR=10.0.0.0/8
-`
-	if err := os.WriteFile(envPath, []byte(envContent), 0644); err != nil {
-		t.Fatalf("failed to write .env: %v", err)
-	}
-
-	cfg, err := LoadConfigMultiple(yamlPath, envPath)
-	if err != nil {
-		t.Fatalf("failed to load config: %v", err)
-	}
-
-	if cfg.ServerAddr != "yaml.example.com:8080" {
-		t.Errorf("expected ServerAddr from yaml, got %s", cfg.ServerAddr)
-	}
-	if cfg.ListenPort != 2222 {
-		t.Errorf("expected ListenPort 2222 from env (override), got %d", cfg.ListenPort)
-	}
-	if cfg.TargetCIDR != "10.0.0.0/8" {
-		t.Errorf("expected TargetCIDR from env, got %s", cfg.TargetCIDR)
-	}
-}
+// TestLoadConfigMultiple removed - multi-file loading adds complexity
+// without clear benefit. Use a single config file or environment variables.

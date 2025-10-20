@@ -7,18 +7,21 @@ import (
 	"testing"
 
 	"network-tunneler/internal/certs"
-	"network-tunneler/internal/config"
+	"network-tunneler/pkg/crypto"
 )
 
 func TestLoadTLSConfig_Embedded(t *testing.T) {
-	tlsConfig, err := LoadTLSConfig(&config.TLSConfig{
+	tlsConfig, err := crypto.LoadServerTLSConfig(crypto.TLSOptions{
 		CertPath:           "",
 		KeyPath:            "",
 		CAPath:             "",
+		CertPEM:            []byte(certs.ServerCert),
+		KeyPEM:             []byte(certs.ServerKey),
+		CAPEM:              []byte(certs.CACert),
 		InsecureSkipVerify: false,
 	})
 	if err != nil {
-		t.Fatalf("LoadTLSConfig failed: %v", err)
+		t.Fatalf("LoadServerTLSConfig failed: %v", err)
 	}
 
 	if len(tlsConfig.Certificates) != 1 {
@@ -51,14 +54,17 @@ func TestLoadTLSConfig_FromFiles(t *testing.T) {
 		t.Fatalf("failed to write CA: %v", err)
 	}
 
-	tlsConfig, err := LoadTLSConfig(&config.TLSConfig{
+	tlsConfig, err := crypto.LoadServerTLSConfig(crypto.TLSOptions{
 		CertPath:           certPath,
 		KeyPath:            keyPath,
 		CAPath:             caPath,
+		CertPEM:            []byte(certs.ServerCert),
+		KeyPEM:             []byte(certs.ServerKey),
+		CAPEM:              []byte(certs.CACert),
 		InsecureSkipVerify: false,
 	})
 	if err != nil {
-		t.Fatalf("LoadTLSConfig failed: %v", err)
+		t.Fatalf("LoadServerTLSConfig failed: %v", err)
 	}
 
 	if len(tlsConfig.Certificates) != 1 {

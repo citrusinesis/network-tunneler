@@ -5,6 +5,8 @@ import (
 
 	"go.uber.org/fx"
 
+	"network-tunneler/internal/certs"
+	"network-tunneler/pkg/crypto"
 	"network-tunneler/pkg/logger"
 )
 
@@ -28,19 +30,23 @@ type ProvidedConfig struct {
 }
 
 func ProvideConfig(configFile string) (ProvidedConfig, error) {
-	var cfg *Config
-	var err error
-
-	if configFile == "" {
-		cfg = DefaultConfig()
-	} else {
-		cfg, err = LoadConfig(configFile)
-		if err != nil {
-			return ProvidedConfig{}, err
-		}
+	cfg, err := LoadConfig(configFile)
+	if err != nil {
+		return ProvidedConfig{}, err
 	}
 
-	tlsConfig, err := LoadTLSConfig(cfg.GetTLS())
+	tlsOpts := cfg.TLS
+	if tlsOpts.CertPath == "" && tlsOpts.CertPEM == nil {
+		tlsOpts.CertPEM = []byte(certs.ServerCert)
+	}
+	if tlsOpts.KeyPath == "" && tlsOpts.KeyPEM == nil {
+		tlsOpts.KeyPEM = []byte(certs.ServerKey)
+	}
+	if tlsOpts.CAPath == "" && tlsOpts.CAPEM == nil {
+		tlsOpts.CAPEM = []byte(certs.CACert)
+	}
+
+	tlsConfig, err := crypto.LoadServerTLSConfig(tlsOpts)
 	if err != nil {
 		return ProvidedConfig{}, err
 	}
@@ -48,6 +54,6 @@ func ProvideConfig(configFile string) (ProvidedConfig, error) {
 	return ProvidedConfig{
 		Config:       cfg,
 		TLSConfig:    tlsConfig,
-		LoggerConfig: cfg.Log.ToLoggerConfig(),
+		LoggerConfig: &cfg.Log,
 	}, nil
 }

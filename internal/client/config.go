@@ -4,15 +4,17 @@ import (
 	"fmt"
 
 	"network-tunneler/internal/config"
+	"network-tunneler/pkg/crypto"
+	"network-tunneler/pkg/logger"
 )
 
 type Config struct {
-	ClientID    string           `mapstructure:"client_id" json:"client_id" yaml:"client_id"`
-	ServerAddr string           `mapstructure:"server_addr" json:"server_addr" yaml:"server_addr"`
-	ListenPort int              `mapstructure:"listen_port" json:"listen_port" yaml:"listen_port"`
-	TargetCIDR string           `mapstructure:"target_cidr" json:"target_cidr" yaml:"target_cidr"`
-	TLS        config.TLSConfig `mapstructure:"tls" json:"tls" yaml:"tls"`
-	Log        config.LogConfig `mapstructure:"log" json:"log" yaml:"log"`
+	ClientID    string             `mapstructure:"client_id" json:"client_id" yaml:"client_id"`
+	ServerAddr string             `mapstructure:"server_addr" json:"server_addr" yaml:"server_addr"`
+	ListenPort int                `mapstructure:"listen_port" json:"listen_port" yaml:"listen_port"`
+	TargetCIDR string             `mapstructure:"target_cidr" json:"target_cidr" yaml:"target_cidr"`
+	TLS        crypto.TLSOptions  `mapstructure:"tls" json:"tls" yaml:"tls"`
+	Log        logger.Config      `mapstructure:"log" json:"log" yaml:"log"`
 }
 
 func DefaultConfig() *Config {
@@ -21,7 +23,7 @@ func DefaultConfig() *Config {
 		ServerAddr: "localhost:8080",
 		ListenPort: 9999,
 		TargetCIDR: "100.64.0.0/10",
-		TLS:        config.DefaultTLSConfig("client"),
+		TLS:        crypto.TLSOptions{},
 		Log:        config.DefaultLogConfig(),
 	}
 }
@@ -29,14 +31,6 @@ func DefaultConfig() *Config {
 func LoadConfig(configFile string) (*Config, error) {
 	cfg := DefaultConfig()
 	if err := config.Load("client", configFile, cfg); err != nil {
-		return nil, err
-	}
-	return cfg, nil
-}
-
-func LoadConfigMultiple(configFiles ...string) (*Config, error) {
-	cfg := DefaultConfig()
-	if err := config.LoadMultiple("client", configFiles, cfg); err != nil {
 		return nil, err
 	}
 	return cfg, nil
@@ -53,12 +47,4 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("target CIDR is required")
 	}
 	return nil
-}
-
-func (c *Config) GetTLS() *config.TLSConfig {
-	return &c.TLS
-}
-
-func (c *Config) GetLog() *config.LogConfig {
-	return &c.Log
 }
