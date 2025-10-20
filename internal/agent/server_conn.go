@@ -2,7 +2,9 @@ package agent
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/tls"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"sync"
@@ -13,7 +15,6 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"network-tunneler/internal/network"
 	"network-tunneler/pkg/logger"
 	pb "network-tunneler/proto"
 )
@@ -104,11 +105,11 @@ func (sc *ServerConnection) Connect(ctx context.Context) error {
 func (sc *ServerConnection) register() error {
 	agentID := sc.config.AgentID
 	if agentID == "" {
-		var err error
-		agentID, err = network.GenerateAgentID()
-		if err != nil {
+		b := make([]byte, 8)
+		if _, err := rand.Read(b); err != nil {
 			return fmt.Errorf("failed to generate agent ID: %w", err)
 		}
+		agentID = fmt.Sprintf("agent-%s", hex.EncodeToString(b))
 		sc.agentID = agentID
 	} else {
 		sc.agentID = agentID
