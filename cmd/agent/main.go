@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -56,6 +57,8 @@ func main() {
 }
 
 func run(cmd *cobra.Command, args []string) {
+	var log logger.Logger
+
 	app := fx.New(
 		fx.Supply(configFile),
 		fx.Decorate(applyOverrides),
@@ -63,10 +66,32 @@ func run(cmd *cobra.Command, args []string) {
 		logger.Module,
 		agent.Module,
 
+		fx.WithLogger(logger.NewFxLogger),
+
+		fx.Populate(&log),
 		fx.Invoke(func(*agent.Agent) {}),
 	)
 
-	app.Run()
+	if err := app.Start(cmd.Context()); err != nil {
+		if log != nil {
+			log.Error("failed to start agent", logger.Error(err))
+		} else {
+			fmt.Fprintf(os.Stderr, "Failed to start agent: %v\n", err)
+		}
+		os.Exit(1)
+	}
+
+	<-app.Done()
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), fx.DefaultTimeout)
+	defer cancel()
+
+	if err := app.Stop(shutdownCtx); err != nil {
+		log.Error("error during shutdown", logger.Error(err))
+		os.Exit(1)
+	}
+
+	log.Info("agent shutdown complete")
 }
 
 func applyOverrides(cfg *agent.Config) *agent.Config {
