@@ -18,16 +18,16 @@ var ServerCert string
 //go:embed server.key
 var ServerKey string
 
-// Agent Certificate
-//go:embed agent.crt
-var AgentCert string
+// Client Certificate
+//go:embed client.crt
+var ClientCert string
 
-//go:embed agent.key
-var AgentKey string
+//go:embed client.key
+var ClientKey string
 
-// Implant Certificate
-//go:embed implant.crt
-var ImplantCert string
+// Proxy Certificate
+//go:embed proxy.crt
+var ProxyCert string
 
-//go:embed implant.key
-var ImplantKey string
+//go:embed proxy.key
+var ProxyKey string

@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/fx"
 
-	"network-tunneler/internal/agent"
+	"network-tunneler/internal/proxy"
 	"network-tunneler/internal/version"
 	"network-tunneler/pkg/logger"
 )
@@ -17,22 +17,20 @@ import (
 var (
 	configFile string
 	serverAddr string
-	targetCIDR string
-	listenPort int
+	proxyID  string
 )
 
 func main() {
 	rootCmd := &cobra.Command{
-		Use:     "agent",
-		Short:   "Network tunneler agent - intercepts and forwards traffic to server",
+		Use:     "proxy",
+		Short:   "Network tunneler proxy - forwards traffic to internal network",
 		Version: version.Short(),
 		Run:     run,
 	}
 
 	rootCmd.Flags().StringVarP(&configFile, "config", "c", "", "Config file (yaml/json/.env)")
 	rootCmd.Flags().StringVar(&serverAddr, "server", "", "Server address (overrides config)")
-	rootCmd.Flags().StringVar(&targetCIDR, "cidr", "", "Target CIDR to intercept (overrides config)")
-	rootCmd.Flags().IntVar(&listenPort, "port", 0, "Local listen port (overrides config)")
+	rootCmd.Flags().StringVar(&proxyID, "id", "", "Proxy ID (overrides config)")
 
 	versionCmd := &cobra.Command{
 		Use:   "version",
@@ -64,19 +62,19 @@ func run(cmd *cobra.Command, args []string) {
 		fx.Decorate(applyOverrides),
 
 		logger.Module,
-		agent.Module,
+		proxy.Module,
 
 		fx.WithLogger(logger.NewFxLogger),
 
 		fx.Populate(&log),
-		fx.Invoke(func(*agent.Agent) {}),
+		fx.Invoke(func(*proxy.Proxy) {}),
 	)
 
 	if err := app.Start(cmd.Context()); err != nil {
 		if log != nil {
-			log.Error("failed to start agent", logger.Error(err))
+			log.Error("failed to start proxy", logger.Error(err))
 		} else {
-			fmt.Fprintf(os.Stderr, "Failed to start agent: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Failed to start proxy: %v\n", err)
 		}
 		os.Exit(1)
 	}
@@ -91,18 +89,15 @@ func run(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	log.Info("agent shutdown complete")
+	log.Info("proxy shutdown complete")
 }
 
-func applyOverrides(cfg *agent.Config) *agent.Config {
+func applyOverrides(cfg *proxy.Config) *proxy.Config {
 	if serverAddr != "" {
 		cfg.ServerAddr = serverAddr
 	}
-	if targetCIDR != "" {
-		cfg.TargetCIDR = targetCIDR
-	}
-	if listenPort != 0 {
-		cfg.ListenPort = listenPort
+	if proxyID != "" {
+		cfg.ProxyID = proxyID
 	}
 	return cfg
 }

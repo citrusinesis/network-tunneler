@@ -1,6 +1,6 @@
 .PHONY: help proto gencerts build build-dev build-debug build-release clean test test-race test-short test-coverage fmt vet lint
-.PHONY: run-agent run-server run-implant install tools
-.PHONY: docker-build docker-agent docker-server docker-implant
+.PHONY: run-client run-server run-proxy install tools
+.PHONY: docker-build docker-client docker-server docker-proxy
 .PHONY: all
 
 BINARY_DIR := bin
@@ -24,9 +24,9 @@ LDFLAGS_RELEASE := -s -w $(LDFLAGS_BASE) \
 
 LDFLAGS := $(LDFLAGS_DEBUG)
 
-AGENT_BIN := $(BINARY_DIR)/agent
+CLIENT_BIN := $(BINARY_DIR)/client
 SERVER_BIN := $(BINARY_DIR)/server
-IMPLANT_BIN := $(BINARY_DIR)/implant
+PROXY_BIN := $(BINARY_DIR)/proxy
 GENCERTS_BIN := $(BINARY_DIR)/gencerts
 
 all: proto build
@@ -57,15 +57,15 @@ help:
 	@echo "  lint          - Run go vet (use golangci-lint if available)"
 	@echo ""
 	@echo "Run:"
-	@echo "  run-agent     - Run the agent"
+	@echo "  run-client     - Run the client"
 	@echo "  run-server    - Run the server"
-	@echo "  run-implant   - Run the implant"
+	@echo "  run-proxy   - Run the proxy"
 	@echo ""
 	@echo "Docker:"
 	@echo "  docker-build  - Build all Docker images with Nix"
-	@echo "  docker-agent  - Build agent Docker image"
+	@echo "  docker-client  - Build client Docker image"
 	@echo "  docker-server - Build server Docker image"
-	@echo "  docker-implant- Build implant Docker image"
+	@echo "  docker-proxy- Build proxy Docker image"
 
 proto:
 	@echo "==> Generating protobuf code..."
@@ -88,17 +88,17 @@ build-dev: build-debug
 
 build-debug: $(BINARY_DIR)
 	@echo "==> Building binaries (debug mode)..."
-	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS_DEBUG)" -o $(AGENT_BIN) ./cmd/agent
+	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS_DEBUG)" -o $(CLIENT_BIN) ./cmd/client
 	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS_DEBUG)" -o $(SERVER_BIN) ./cmd/server
-	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS_DEBUG)" -o $(IMPLANT_BIN) ./cmd/implant
+	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS_DEBUG)" -o $(PROXY_BIN) ./cmd/proxy
 	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS_DEBUG)" -o $(GENCERTS_BIN) ./cmd/gencerts
 	@echo "==> Debug build complete"
 
 build-release: $(BINARY_DIR)
 	@echo "==> Building binaries (release mode)..."
-	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS_RELEASE)" -o $(AGENT_BIN) ./cmd/agent
+	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS_RELEASE)" -o $(CLIENT_BIN) ./cmd/client
 	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS_RELEASE)" -o $(SERVER_BIN) ./cmd/server
-	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS_RELEASE)" -o $(IMPLANT_BIN) ./cmd/implant
+	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS_RELEASE)" -o $(PROXY_BIN) ./cmd/proxy
 	$(GO) build $(GOFLAGS) -ldflags "$(LDFLAGS_RELEASE)" -o $(GENCERTS_BIN) ./cmd/gencerts
 	@echo "==> Release build complete"
 
@@ -147,40 +147,40 @@ lint: vet
 
 install:
 	@echo "==> Installing binaries..."
-	$(GO) install ./cmd/agent
+	$(GO) install ./cmd/client
 	$(GO) install ./cmd/server
-	$(GO) install ./cmd/implant
+	$(GO) install ./cmd/proxy
 	$(GO) install ./cmd/gencerts
 	@echo "==> Install complete"
 
-run-agent:
-	@echo "==> Running agent..."
-	$(GO) run ./cmd/agent
+run-client:
+	@echo "==> Running client..."
+	$(GO) run ./cmd/client
 
 run-server:
 	@echo "==> Running server..."
 	$(GO) run ./cmd/server
 
-run-implant:
-	@echo "==> Running implant..."
-	$(GO) run ./cmd/implant
+run-proxy:
+	@echo "==> Running proxy..."
+	$(GO) run ./cmd/proxy
 
-docker-build: docker-agent docker-server docker-implant
+docker-build: docker-client docker-server docker-proxy
 
-docker-agent:
-	@echo "==> Building agent Docker image..."
-	nix build .#docker-agent
-	@echo "==> Agent image: result"
+docker-client:
+	@echo "==> Building client Docker image..."
+	nix build .#docker-client
+	@echo "==> Client image: result"
 
 docker-server:
 	@echo "==> Building server Docker image..."
 	nix build .#docker-server
 	@echo "==> Server image: result"
 
-docker-implant:
-	@echo "==> Building implant Docker image..."
-	nix build .#docker-implant
-	@echo "==> Implant image: result"
+docker-proxy:
+	@echo "==> Building proxy Docker image..."
+	nix build .#docker-proxy
+	@echo "==> Proxy image: result"
 
 tools:
 	@echo "==> Installing development tools..."

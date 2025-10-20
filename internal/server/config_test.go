@@ -7,11 +7,11 @@ import (
 func TestDefaultConfig(t *testing.T) {
 	cfg := DefaultConfig()
 
-	if cfg.AgentListenAddr != ":8080" {
-		t.Errorf("expected AgentListenAddr :8080, got %s", cfg.AgentListenAddr)
+	if cfg.ClientListenAddr != ":8080" {
+		t.Errorf("expected ClientListenAddr :8080, got %s", cfg.ClientListenAddr)
 	}
-	if cfg.ImplantListenAddr != ":8081" {
-		t.Errorf("expected ImplantListenAddr :8081, got %s", cfg.ImplantListenAddr)
+	if cfg.ProxyListenAddr != ":8081" {
+		t.Errorf("expected ProxyListenAddr :8081, got %s", cfg.ProxyListenAddr)
 	}
 }
 
@@ -27,26 +27,26 @@ func TestConfigValidation(t *testing.T) {
 			expectErr: false,
 		},
 		{
-			name: "missing agent listen addr",
+			name: "missing client listen addr",
 			cfg: &Config{
-				AgentListenAddr:   "",
-				ImplantListenAddr: ":8081",
+				ClientListenAddr:   "",
+				ProxyListenAddr: ":8081",
 			},
 			expectErr: true,
 		},
 		{
-			name: "missing implant listen addr",
+			name: "missing proxy listen addr",
 			cfg: &Config{
-				AgentListenAddr:   ":8080",
-				ImplantListenAddr: "",
+				ClientListenAddr:   ":8080",
+				ProxyListenAddr: "",
 			},
 			expectErr: true,
 		},
 		{
 			name: "same addresses",
 			cfg: &Config{
-				AgentListenAddr:   ":8080",
-				ImplantListenAddr: ":8080",
+				ClientListenAddr:   ":8080",
+				ProxyListenAddr: ":8080",
 			},
 			expectErr: true,
 		},

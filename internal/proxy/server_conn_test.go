@@ -1,4 +1,4 @@
-package implant
+package proxy
 
 import (
 	"context"
@@ -13,15 +13,15 @@ import (
 	pb "network-tunneler/proto"
 )
 
-type mockImplantServer struct {
-	pb.UnimplementedTunnelImplantServer
-	registerChan  chan *pb.ImplantRegister
+type mockProxyServer struct {
+	pb.UnimplementedTunnelProxyServer
+	registerChan  chan *pb.ProxyRegister
 	packetChan    chan *pb.Packet
 	heartbeatChan chan *pb.Heartbeat
-	stream        pb.TunnelImplant_ConnectServer
+	stream        pb.TunnelProxy_ConnectServer
 }
 
-func (m *mockImplantServer) Connect(stream pb.TunnelImplant_ConnectServer) error {
+func (m *mockProxyServer) Connect(stream pb.TunnelProxy_ConnectServer) error {
 	m.stream = stream
 
 	for {
@@ -31,10 +31,10 @@ func (m *mockImplantServer) Connect(stream pb.TunnelImplant_ConnectServer) error
 		}
 
 		switch msg := msg.Message.(type) {
-		case *pb.ImplantMessage_Register:
+		case *pb.ProxyMessage_Register:
 			m.registerChan <- msg.Register
-			ack := &pb.ImplantMessage{
-				Message: &pb.ImplantMessage_Ack{
+			ack := &pb.ProxyMessage{
+				Message: &pb.ProxyMessage_Ack{
 					Ack: &pb.RegisterAck{
 						Success: true,
 						Message: "registered successfully",
@@ -45,16 +45,16 @@ func (m *mockImplantServer) Connect(stream pb.TunnelImplant_ConnectServer) error
 				return err
 			}
 
-		case *pb.ImplantMessage_Packet:
+		case *pb.ProxyMessage_Packet:
 			m.packetChan <- msg.Packet
 
-		case *pb.ImplantMessage_Heartbeat:
+		case *pb.ProxyMessage_Heartbeat:
 			m.heartbeatChan <- msg.Heartbeat
 		}
 	}
 }
 
-func setupMockServer(t *testing.T) (*grpc.Server, string, *mockImplantServer) {
+func setupMockServer(t *testing.T) (*grpc.Server, string, *mockProxyServer) {
 	lis, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("failed to listen: %v", err)
@@ -62,13 +62,13 @@ func setupMockServer(t *testing.T) (*grpc.Server, string, *mockImplantServer) {
 
 	server := grpc.NewServer()
 
-	mock := &mockImplantServer{
-		registerChan:  make(chan *pb.ImplantRegister, 1),
+	mock := &mockProxyServer{
+		registerChan:  make(chan *pb.ProxyRegister, 1),
 		packetChan:    make(chan *pb.Packet, 10),
 		heartbeatChan: make(chan *pb.Heartbeat, 10),
 	}
 
-	pb.RegisterTunnelImplantServer(server, mock)
+	pb.RegisterTunnelProxyServer(server, mock)
 
 	go server.Serve(lis)
 
@@ -78,7 +78,7 @@ func setupMockServer(t *testing.T) (*grpc.Server, string, *mockImplantServer) {
 func newTestServerConnection(addr string, forwarder *PacketForwarder, responseChan <-chan *pb.Packet, log logger.Logger) *ServerConnection {
 	return &ServerConnection{
 		serverAddr:   addr,
-		implantID:    "implant-1",
+		proxyID:    "proxy-1",
 		managedCIDR:  "192.168.1.0/24",
 		forwarder:    forwarder,
 		logger:       log.With(logger.String("component", "server_conn")),
@@ -112,8 +112,8 @@ func TestServerConnection_Connect(t *testing.T) {
 
 	select {
 	case reg := <-mock.registerChan:
-		if reg.ImplantId != "implant-1" {
-			t.Errorf("expected implant_id 'implant-1', got %s", reg.ImplantId)
+		if reg.ProxyId != "proxy-1" {
+			t.Errorf("expected proxy_id 'proxy-1', got %s", reg.ProxyId)
 		}
 		if reg.ManagedCidr != "192.168.1.0/24" {
 			t.Errorf("expected managed_cidr '192.168.1.0/24', got %s", reg.ManagedCidr)
@@ -226,8 +226,8 @@ func TestServerConnection_ReceivePacket(t *testing.T) {
 
 	<-mock.registerChan
 
-	incomingPacket := &pb.ImplantMessage{
-		Message: &pb.ImplantMessage_Packet{
+	incomingPacket := &pb.ProxyMessage{
+		Message: &pb.ProxyMessage_Packet{
 			Packet: &pb.Packet{
 				ConnectionId: "test-conn-1",
 				Data:         []byte("data from server"),

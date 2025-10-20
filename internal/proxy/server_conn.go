@@ -1,4 +1,4 @@
-package implant
+package proxy
 
 import (
 	"context"
@@ -18,7 +18,7 @@ import (
 
 type ServerConnection struct {
 	serverAddr   string
-	implantID    string
+	proxyID    string
 	managedCIDR  string
 	tlsConfig    *tls.Config
 	logger       logger.Logger
@@ -26,8 +26,8 @@ type ServerConnection struct {
 	grpcInsecure bool
 
 	grpcConn   *grpc.ClientConn
-	grpcClient pb.TunnelImplantClient
-	stream     pb.TunnelImplant_ConnectClient
+	grpcClient pb.TunnelProxyClient
+	stream     pb.TunnelProxy_ConnectClient
 
 	responseChan <-chan *pb.Packet
 	stopChan     chan struct{}
@@ -46,7 +46,7 @@ type ServerConnParams struct {
 func NewServerConnection(p ServerConnParams) *ServerConnection {
 	return &ServerConnection{
 		serverAddr:   p.Config.ServerAddr,
-		implantID:    p.Config.ImplantID,
+		proxyID:    p.Config.ProxyID,
 		managedCIDR:  p.Config.ManagedCIDR,
 		tlsConfig:    p.TLSConfig,
 		forwarder:    p.Forwarder,
@@ -75,7 +75,7 @@ func (sc *ServerConnection) Connect(ctx context.Context) error {
 	}
 
 	sc.grpcConn = conn
-	sc.grpcClient = pb.NewTunnelImplantClient(conn)
+	sc.grpcClient = pb.NewTunnelProxyClient(conn)
 
 	stream, err := sc.grpcClient.Connect(ctx)
 	if err != nil {
@@ -100,10 +100,10 @@ func (sc *ServerConnection) Connect(ctx context.Context) error {
 }
 
 func (sc *ServerConnection) register() error {
-	regMsg := &pb.ImplantMessage{
-		Message: &pb.ImplantMessage_Register{
-			Register: &pb.ImplantRegister{
-				ImplantId:   sc.implantID,
+	regMsg := &pb.ProxyMessage{
+		Message: &pb.ProxyMessage_Register{
+			Register: &pb.ProxyRegister{
+				ProxyId:   sc.proxyID,
 				ManagedCidr: sc.managedCIDR,
 			},
 		},
@@ -114,7 +114,7 @@ func (sc *ServerConnection) register() error {
 	}
 
 	sc.logger.Info("registration sent",
-		logger.String("implant_id", sc.implantID),
+		logger.String("proxy_id", sc.proxyID),
 		logger.String("managed_cidr", sc.managedCIDR),
 	)
 
@@ -123,7 +123,7 @@ func (sc *ServerConnection) register() error {
 		return fmt.Errorf("failed to receive ack: %w", err)
 	}
 
-	ack, ok := ackMsg.Message.(*pb.ImplantMessage_Ack)
+	ack, ok := ackMsg.Message.(*pb.ProxyMessage_Ack)
 	if !ok {
 		return fmt.Errorf("expected ack message, got %T", ackMsg.Message)
 	}
@@ -155,7 +155,7 @@ func (sc *ServerConnection) readLoop() {
 		}
 
 		switch m := msg.Message.(type) {
-		case *pb.ImplantMessage_Packet:
+		case *pb.ProxyMessage_Packet:
 			sc.logger.Debug("received packet from server",
 				logger.String("conn_id", m.Packet.ConnectionId),
 				logger.Int("bytes", len(m.Packet.Data)),
@@ -181,8 +181,8 @@ func (sc *ServerConnection) writeLoop() {
 	for {
 		select {
 		case pkt := <-sc.responseChan:
-			msg := &pb.ImplantMessage{
-				Message: &pb.ImplantMessage_Packet{
+			msg := &pb.ProxyMessage{
+				Message: &pb.ProxyMessage_Packet{
 					Packet: pkt,
 				},
 			}
@@ -201,8 +201,8 @@ func (sc *ServerConnection) writeLoop() {
 }
 
 func (sc *ServerConnection) SendHeartbeat() error {
-	msg := &pb.ImplantMessage{
-		Message: &pb.ImplantMessage_Heartbeat{
+	msg := &pb.ProxyMessage{
+		Message: &pb.ProxyMessage_Heartbeat{
 			Heartbeat: &pb.Heartbeat{
 				Timestamp: time.Now().Unix(),
 			},

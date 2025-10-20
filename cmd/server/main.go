@@ -24,7 +24,7 @@ var (
 func main() {
 	rootCmd := &cobra.Command{
 		Use:     "server",
-		Short:   "Network tunneler server - central relay for agents and implants",
+		Short:   "Network tunneler server - central relay for clients and proxys",
 		Version: version.Short(),
 		Run:     run,
 	}

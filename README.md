@@ -8,9 +8,9 @@ A proof-of-concept implementation of a network tunneling system built with Go, d
 
 ## Components
 
-- **Agent**: Client-side tunneling agent
+- **Client**: Client-side tunneling client
 - **Server**: Central tunneling server
-- **Implant**: Network implant component
+- **Proxy**: Network proxy component
 
 ## Development
 
@@ -38,18 +38,18 @@ direnv allow
 nix build
 
 # Build specific component
-nix build .#agent
+nix build .#client
 nix build .#server
-nix build .#implant
+nix build .#proxy
 ```
 
 ### Docker Images
 
 ```bash
 # Build Docker images
-nix build .#docker-agent
+nix build .#docker-client
 nix build .#docker-server
-nix build .#docker-implant
+nix build .#docker-proxy
 ```
 
 ## Project Structure
@@ -57,9 +57,9 @@ nix build .#docker-implant
 ```
 .
 ├── cmd/
-│   ├── agent/      # Agent binary entry point
+│   ├── client/      # Client binary entry point
 │   ├── server/     # Server binary entry point
-│   └── implant/    # Implant binary entry point
+│   └── proxy/    # Proxy binary entry point
 ├── flake.nix       # Nix flake configuration
 ├── flake.lock      # Nix flake lock file
 └── go.mod          # Go module definition

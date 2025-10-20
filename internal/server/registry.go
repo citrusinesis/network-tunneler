@@ -11,24 +11,24 @@ import (
 	pb "network-tunneler/proto"
 )
 
-type AgentConn struct {
+type ClientConn struct {
 	ID          string
-	Stream      pb.TunnelAgent_ConnectServer
+	Stream      pb.TunnelClient_ConnectServer
 	RemoteAddr  string
 	ConnectedAt time.Time
 }
 
-type ImplantConn struct {
+type ProxyConn struct {
 	ID          string
-	Stream      pb.TunnelImplant_ConnectServer
+	Stream      pb.TunnelProxy_ConnectServer
 	RemoteAddr  string
 	ManagedCIDR string
 	ConnectedAt time.Time
 }
 
 type Registry struct {
-	agents      map[string]*AgentConn
-	implants    map[string]*ImplantConn
+	clients      map[string]*ClientConn
+	proxys    map[string]*ProxyConn
 	connections map[string]*ConnectionRoute // connectionID -> route
 	mu          sync.RWMutex
 	logger      logger.Logger
@@ -39,21 +39,21 @@ type Registry struct {
 
 type ConnectionRoute struct {
 	ConnectionID     string
-	AgentID          string
-	ImplantID        string
+	ClientID          string
+	ProxyID        string
 	CreatedAt        time.Time
 	LastActivity     time.Time
-	PacketsToAgent   uint64
-	PacketsToImplant uint64
-	BytesToAgent     uint64
-	BytesToImplant   uint64
+	PacketsToClient   uint64
+	PacketsToProxy uint64
+	BytesToClient     uint64
+	BytesToProxy   uint64
 }
 
 func NewRegistry(log logger.Logger) *Registry {
 	ctx, cancel := context.WithCancel(context.Background())
 	r := &Registry{
-		agents:      make(map[string]*AgentConn),
-		implants:    make(map[string]*ImplantConn),
+		clients:      make(map[string]*ClientConn),
+		proxys:    make(map[string]*ProxyConn),
 		connections: make(map[string]*ConnectionRoute),
 		logger:      log.With(logger.String("component", "registry")),
 		ctx:         ctx,
@@ -114,59 +114,59 @@ func (r *Registry) cleanupStaleConnections() {
 	}
 }
 
-func (r *Registry) RegisterAgentStream(id string, stream pb.TunnelAgent_ConnectServer) error {
+func (r *Registry) RegisterClientStream(id string, stream pb.TunnelClient_ConnectServer) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if _, exists := r.agents[id]; exists {
-		return fmt.Errorf("agent %s already registered", id)
+	if _, exists := r.clients[id]; exists {
+		return fmt.Errorf("client %s already registered", id)
 	}
 
-	agent := &AgentConn{
+	client := &ClientConn{
 		ID:          id,
 		Stream:      stream,
 		RemoteAddr:  "grpc-stream",
 		ConnectedAt: time.Now(),
 	}
 
-	r.agents[id] = agent
-	r.logger.Info("agent registered via gRPC",
-		logger.String("agent_id", id),
+	r.clients[id] = client
+	r.logger.Info("client registered via gRPC",
+		logger.String("client_id", id),
 	)
 
 	return nil
 }
 
-func (r *Registry) UnregisterAgent(id string) {
+func (r *Registry) UnregisterClient(id string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if agent, exists := r.agents[id]; exists {
-		delete(r.agents, id)
-		r.logger.Info("agent unregistered",
-			logger.String("agent_id", id),
-			logger.String("remote", agent.RemoteAddr),
+	if client, exists := r.clients[id]; exists {
+		delete(r.clients, id)
+		r.logger.Info("client unregistered",
+			logger.String("client_id", id),
+			logger.String("remote", client.RemoteAddr),
 		)
 	}
 }
 
-func (r *Registry) GetAgent(id string) (*AgentConn, bool) {
+func (r *Registry) GetClient(id string) (*ClientConn, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	agent, exists := r.agents[id]
-	return agent, exists
+	client, exists := r.clients[id]
+	return client, exists
 }
 
-func (r *Registry) RegisterImplantStream(id string, stream pb.TunnelImplant_ConnectServer, managedCIDR string) error {
+func (r *Registry) RegisterProxyStream(id string, stream pb.TunnelProxy_ConnectServer, managedCIDR string) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if _, exists := r.implants[id]; exists {
-		return fmt.Errorf("implant %s already registered", id)
+	if _, exists := r.proxys[id]; exists {
+		return fmt.Errorf("proxy %s already registered", id)
 	}
 
-	implant := &ImplantConn{
+	proxy := &ProxyConn{
 		ID:          id,
 		Stream:      stream,
 		RemoteAddr:  "grpc-stream",
@@ -174,37 +174,37 @@ func (r *Registry) RegisterImplantStream(id string, stream pb.TunnelImplant_Conn
 		ConnectedAt: time.Now(),
 	}
 
-	r.implants[id] = implant
-	r.logger.Info("implant registered via gRPC",
-		logger.String("implant_id", id),
+	r.proxys[id] = proxy
+	r.logger.Info("proxy registered via gRPC",
+		logger.String("proxy_id", id),
 		logger.String("managed_cidr", managedCIDR),
 	)
 
 	return nil
 }
 
-func (r *Registry) UnregisterImplant(id string) {
+func (r *Registry) UnregisterProxy(id string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if implant, exists := r.implants[id]; exists {
-		delete(r.implants, id)
-		r.logger.Info("implant unregistered",
-			logger.String("implant_id", id),
-			logger.String("remote", implant.RemoteAddr),
+	if proxy, exists := r.proxys[id]; exists {
+		delete(r.proxys, id)
+		r.logger.Info("proxy unregistered",
+			logger.String("proxy_id", id),
+			logger.String("remote", proxy.RemoteAddr),
 		)
 	}
 }
 
-func (r *Registry) GetImplant(id string) (*ImplantConn, bool) {
+func (r *Registry) GetProxy(id string) (*ProxyConn, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	implant, exists := r.implants[id]
-	return implant, exists
+	proxy, exists := r.proxys[id]
+	return proxy, exists
 }
 
-func (r *Registry) FindImplantByCIDR(targetIP string) (*ImplantConn, bool) {
+func (r *Registry) FindProxyByCIDR(targetIP string) (*ProxyConn, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -214,57 +214,57 @@ func (r *Registry) FindImplantByCIDR(targetIP string) (*ImplantConn, bool) {
 		return nil, false
 	}
 
-	for _, implant := range r.implants {
-		_, cidr, err := net.ParseCIDR(implant.ManagedCIDR)
+	for _, proxy := range r.proxys {
+		_, cidr, err := net.ParseCIDR(proxy.ManagedCIDR)
 		if err != nil {
-			r.logger.Warn("invalid implant CIDR",
-				logger.String("implant_id", implant.ID),
-				logger.String("cidr", implant.ManagedCIDR),
+			r.logger.Warn("invalid proxy CIDR",
+				logger.String("proxy_id", proxy.ID),
+				logger.String("cidr", proxy.ManagedCIDR),
 				logger.Error(err),
 			)
 			continue
 		}
 
 		if cidr.Contains(ip) {
-			r.logger.Debug("found implant for target IP",
+			r.logger.Debug("found proxy for target IP",
 				logger.String("target_ip", targetIP),
-				logger.String("implant_id", implant.ID),
-				logger.String("managed_cidr", implant.ManagedCIDR),
+				logger.String("proxy_id", proxy.ID),
+				logger.String("managed_cidr", proxy.ManagedCIDR),
 			)
-			return implant, true
+			return proxy, true
 		}
 	}
 
-	r.logger.Warn("no implant found for target IP", logger.String("ip", targetIP))
+	r.logger.Warn("no proxy found for target IP", logger.String("ip", targetIP))
 	return nil, false
 }
 
-func (r *Registry) ListAgents() []*AgentConn {
+func (r *Registry) ListClients() []*ClientConn {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	agents := make([]*AgentConn, 0, len(r.agents))
-	for _, agent := range r.agents {
-		agents = append(agents, agent)
+	clients := make([]*ClientConn, 0, len(r.clients))
+	for _, client := range r.clients {
+		clients = append(clients, client)
 	}
-	return agents
+	return clients
 }
 
-func (r *Registry) ListImplants() []*ImplantConn {
+func (r *Registry) ListProxys() []*ProxyConn {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	implants := make([]*ImplantConn, 0, len(r.implants))
-	for _, implant := range r.implants {
-		implants = append(implants, implant)
+	proxys := make([]*ProxyConn, 0, len(r.proxys))
+	for _, proxy := range r.proxys {
+		proxys = append(proxys, proxy)
 	}
-	return implants
+	return proxys
 }
 
 func (r *Registry) Cleanup(ctx context.Context) error {
 	r.logger.Info("cleaning up registry",
-		logger.Int("agents", len(r.agents)),
-		logger.Int("implants", len(r.implants)),
+		logger.Int("clients", len(r.clients)),
+		logger.Int("proxys", len(r.proxys)),
 		logger.Int("connections", len(r.connections)),
 	)
 
@@ -272,8 +272,8 @@ func (r *Registry) Cleanup(ctx context.Context) error {
 	r.wg.Wait()
 
 	r.mu.Lock()
-	r.agents = make(map[string]*AgentConn)
-	r.implants = make(map[string]*ImplantConn)
+	r.clients = make(map[string]*ClientConn)
+	r.proxys = make(map[string]*ProxyConn)
 	r.connections = make(map[string]*ConnectionRoute)
 	r.mu.Unlock()
 
@@ -282,7 +282,7 @@ func (r *Registry) Cleanup(ctx context.Context) error {
 	return nil
 }
 
-func (r *Registry) RouteFromAgent(agentID string, pkt *pb.Packet) error {
+func (r *Registry) RouteFromClient(clientID string, pkt *pb.Packet) error {
 	r.mu.Lock()
 
 	route, exists := r.connections[pkt.ConnectionId]
@@ -291,17 +291,17 @@ func (r *Registry) RouteFromAgent(agentID string, pkt *pb.Packet) error {
 		if pkt.ConnTuple != nil {
 			destIP = pkt.ConnTuple.DstIp
 		}
-		implant, found := r.findImplantByCIDR(destIP)
+		proxy, found := r.findProxyByCIDR(destIP)
 		if !found {
 			r.mu.Unlock()
-			return fmt.Errorf("no implant found for destination: %s", destIP)
+			return fmt.Errorf("no proxy found for destination: %s", destIP)
 		}
 
 		now := time.Now()
 		route = &ConnectionRoute{
 			ConnectionID: pkt.ConnectionId,
-			AgentID:      agentID,
-			ImplantID:    implant.ID,
+			ClientID:      clientID,
+			ProxyID:    proxy.ID,
 			CreatedAt:    now,
 			LastActivity: now,
 		}
@@ -309,37 +309,37 @@ func (r *Registry) RouteFromAgent(agentID string, pkt *pb.Packet) error {
 
 		r.logger.Info("new connection route created",
 			logger.String("conn_id", pkt.ConnectionId),
-			logger.String("agent_id", agentID),
-			logger.String("implant_id", implant.ID),
+			logger.String("client_id", clientID),
+			logger.String("proxy_id", proxy.ID),
 		)
 	} else {
 		route.LastActivity = time.Now()
 	}
 
-	implant, implantExists := r.implants[route.ImplantID]
+	proxy, proxyExists := r.proxys[route.ProxyID]
 	r.mu.Unlock()
 
-	if !implantExists {
-		return fmt.Errorf("implant not found: %s", route.ImplantID)
+	if !proxyExists {
+		return fmt.Errorf("proxy not found: %s", route.ProxyID)
 	}
 
 	r.mu.Lock()
-	route.PacketsToImplant++
-	route.BytesToImplant += uint64(len(pkt.Data))
+	route.PacketsToProxy++
+	route.BytesToProxy += uint64(len(pkt.Data))
 	r.mu.Unlock()
 
-	r.logger.Debug("routing packet from agent to implant",
+	r.logger.Debug("routing packet from client to proxy",
 		logger.String("conn_id", pkt.ConnectionId),
-		logger.String("implant_id", route.ImplantID),
+		logger.String("proxy_id", route.ProxyID),
 		logger.Int("size", len(pkt.Data)),
 	)
 
-	return implant.Stream.Send(&pb.ImplantMessage{
-		Message: &pb.ImplantMessage_Packet{Packet: pkt},
+	return proxy.Stream.Send(&pb.ProxyMessage{
+		Message: &pb.ProxyMessage_Packet{Packet: pkt},
 	})
 }
 
-func (r *Registry) RouteFromImplant(implantID string, pkt *pb.Packet) error {
+func (r *Registry) RouteFromProxy(proxyID string, pkt *pb.Packet) error {
 	r.mu.Lock()
 	route, exists := r.connections[pkt.ConnectionId]
 	if !exists {
@@ -348,26 +348,26 @@ func (r *Registry) RouteFromImplant(implantID string, pkt *pb.Packet) error {
 	}
 
 	route.LastActivity = time.Now()
-	agent, agentExists := r.agents[route.AgentID]
+	client, clientExists := r.clients[route.ClientID]
 	r.mu.Unlock()
 
-	if !agentExists {
-		return fmt.Errorf("agent not found: %s", route.AgentID)
+	if !clientExists {
+		return fmt.Errorf("client not found: %s", route.ClientID)
 	}
 
 	r.mu.Lock()
-	route.PacketsToAgent++
-	route.BytesToAgent += uint64(len(pkt.Data))
+	route.PacketsToClient++
+	route.BytesToClient += uint64(len(pkt.Data))
 	r.mu.Unlock()
 
-	r.logger.Debug("routing packet from implant to agent",
+	r.logger.Debug("routing packet from proxy to client",
 		logger.String("conn_id", pkt.ConnectionId),
-		logger.String("agent_id", route.AgentID),
+		logger.String("client_id", route.ClientID),
 		logger.Int("size", len(pkt.Data)),
 	)
 
-	return agent.Stream.Send(&pb.AgentMessage{
-		Message: &pb.AgentMessage_Packet{Packet: pkt},
+	return client.Stream.Send(&pb.ClientMessage{
+		Message: &pb.ClientMessage_Packet{Packet: pkt},
 	})
 }
 
@@ -387,14 +387,14 @@ func (r *Registry) GetConnectionCount() int {
 
 type ConnectionMetrics struct {
 	ConnectionID     string
-	AgentID          string
-	ImplantID        string
+	ClientID          string
+	ProxyID        string
 	Age              time.Duration
 	IdleTime         time.Duration
-	PacketsToAgent   uint64
-	PacketsToImplant uint64
-	BytesToAgent     uint64
-	BytesToImplant   uint64
+	PacketsToClient   uint64
+	PacketsToProxy uint64
+	BytesToClient     uint64
+	BytesToProxy   uint64
 }
 
 func (r *Registry) GetConnectionMetrics(connID string) (*ConnectionMetrics, bool) {
@@ -409,14 +409,14 @@ func (r *Registry) GetConnectionMetrics(connID string) (*ConnectionMetrics, bool
 	now := time.Now()
 	return &ConnectionMetrics{
 		ConnectionID:     route.ConnectionID,
-		AgentID:          route.AgentID,
-		ImplantID:        route.ImplantID,
+		ClientID:          route.ClientID,
+		ProxyID:        route.ProxyID,
 		Age:              now.Sub(route.CreatedAt),
 		IdleTime:         now.Sub(route.LastActivity),
-		PacketsToAgent:   route.PacketsToAgent,
-		PacketsToImplant: route.PacketsToImplant,
-		BytesToAgent:     route.BytesToAgent,
-		BytesToImplant:   route.BytesToImplant,
+		PacketsToClient:   route.PacketsToClient,
+		PacketsToProxy: route.PacketsToProxy,
+		BytesToClient:     route.BytesToClient,
+		BytesToProxy:   route.BytesToProxy,
 	}, true
 }
 
@@ -430,40 +430,40 @@ func (r *Registry) GetAllConnectionMetrics() []*ConnectionMetrics {
 	for _, route := range r.connections {
 		metrics = append(metrics, &ConnectionMetrics{
 			ConnectionID:     route.ConnectionID,
-			AgentID:          route.AgentID,
-			ImplantID:        route.ImplantID,
+			ClientID:          route.ClientID,
+			ProxyID:        route.ProxyID,
 			Age:              now.Sub(route.CreatedAt),
 			IdleTime:         now.Sub(route.LastActivity),
-			PacketsToAgent:   route.PacketsToAgent,
-			PacketsToImplant: route.PacketsToImplant,
-			BytesToAgent:     route.BytesToAgent,
-			BytesToImplant:   route.BytesToImplant,
+			PacketsToClient:   route.PacketsToClient,
+			PacketsToProxy: route.PacketsToProxy,
+			BytesToClient:     route.BytesToClient,
+			BytesToProxy:   route.BytesToProxy,
 		})
 	}
 
 	return metrics
 }
 
-func (r *Registry) findImplantByCIDR(targetIP string) (*ImplantConn, bool) {
+func (r *Registry) findProxyByCIDR(targetIP string) (*ProxyConn, bool) {
 	ip := net.ParseIP(targetIP)
 	if ip == nil {
 		r.logger.Warn("invalid target IP", logger.String("ip", targetIP))
 		return nil, false
 	}
 
-	for _, implant := range r.implants {
-		_, cidr, err := net.ParseCIDR(implant.ManagedCIDR)
+	for _, proxy := range r.proxys {
+		_, cidr, err := net.ParseCIDR(proxy.ManagedCIDR)
 		if err != nil {
-			r.logger.Warn("invalid implant CIDR",
-				logger.String("implant_id", implant.ID),
-				logger.String("cidr", implant.ManagedCIDR),
+			r.logger.Warn("invalid proxy CIDR",
+				logger.String("proxy_id", proxy.ID),
+				logger.String("cidr", proxy.ManagedCIDR),
 				logger.Error(err),
 			)
 			continue
 		}
 
 		if cidr.Contains(ip) {
-			return implant, true
+			return proxy, true
 		}
 	}
 	return nil, false

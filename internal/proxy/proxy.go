@@ -1,4 +1,4 @@
-package implant
+package proxy
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"network-tunneler/pkg/logger"
 )
 
-type Implant struct {
+type Proxy struct {
 	config     *Config
 	logger     logger.Logger
 	serverConn *ServerConnection
@@ -27,26 +27,26 @@ type Params struct {
 	Forwarder  *PacketForwarder
 }
 
-func New(p Params) (*Implant, error) {
-	implant := &Implant{
+func New(p Params) (*Proxy, error) {
+	proxy := &Proxy{
 		config:     p.Config,
-		logger:     p.Logger.With(logger.String("component", "implant")),
+		logger:     p.Logger.With(logger.String("component", "proxy")),
 		serverConn: p.ServerConn,
 		forwarder:  p.Forwarder,
 	}
 
 	p.Lifecycle.Append(fx.Hook{
-		OnStart: implant.start,
-		OnStop:  implant.stop,
+		OnStart: proxy.start,
+		OnStop:  proxy.stop,
 	})
 
-	return implant, nil
+	return proxy, nil
 }
 
-func (i *Implant) start(ctx context.Context) error {
-	i.logger.Info("starting implant",
+func (i *Proxy) start(ctx context.Context) error {
+	i.logger.Info("starting proxy",
 		logger.String("server_addr", i.config.ServerAddr),
-		logger.String("implant_id", i.config.ImplantID),
+		logger.String("proxy_id", i.config.ProxyID),
 		logger.String("managed_cidr", i.config.ManagedCIDR),
 	)
 
@@ -59,8 +59,8 @@ func (i *Implant) start(ctx context.Context) error {
 	return nil
 }
 
-func (i *Implant) stop(ctx context.Context) error {
-	i.logger.Info("stopping implant")
+func (i *Proxy) stop(ctx context.Context) error {
+	i.logger.Info("stopping proxy")
 
 	if err := i.serverConn.Close(); err != nil {
 		i.logger.Error("failed to close server connection", logger.Error(err))
@@ -68,12 +68,12 @@ func (i *Implant) stop(ctx context.Context) error {
 
 	i.forwarder.Stop()
 
-	i.logger.Info("implant stopped")
+	i.logger.Info("proxy stopped")
 
 	return nil
 }
 
-func (i *Implant) heartbeatLoop() {
+func (i *Proxy) heartbeatLoop() {
 	defer i.logger.Info("heartbeat loop stopped")
 
 	ticker := time.NewTicker(30 * time.Second)

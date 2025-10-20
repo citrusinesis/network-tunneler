@@ -1,4 +1,4 @@
-package agent
+package client
 
 import (
 	"context"
@@ -26,11 +26,11 @@ type ServerConnection struct {
 	logger       logger.Logger
 	grpcInsecure bool
 	config       *Config
-	agentID      string
+	clientID      string
 
 	grpcConn   *grpc.ClientConn
-	grpcClient pb.TunnelAgentClient
-	stream     pb.TunnelAgent_ConnectClient
+	grpcClient pb.TunnelClientClient
+	stream     pb.TunnelClient_ConnectClient
 
 	packetChan chan *pb.Packet
 	stopChan   chan struct{}
@@ -79,7 +79,7 @@ func (sc *ServerConnection) Connect(ctx context.Context) error {
 	}
 
 	sc.grpcConn = conn
-	sc.grpcClient = pb.NewTunnelAgentClient(conn)
+	sc.grpcClient = pb.NewTunnelClientClient(conn)
 
 	stream, err := sc.grpcClient.Connect(ctx)
 	if err != nil {
@@ -103,22 +103,22 @@ func (sc *ServerConnection) Connect(ctx context.Context) error {
 }
 
 func (sc *ServerConnection) register() error {
-	agentID := sc.config.AgentID
-	if agentID == "" {
+	clientID := sc.config.ClientID
+	if clientID == "" {
 		b := make([]byte, 8)
 		if _, err := rand.Read(b); err != nil {
-			return fmt.Errorf("failed to generate agent ID: %w", err)
+			return fmt.Errorf("failed to generate client ID: %w", err)
 		}
-		agentID = fmt.Sprintf("agent-%s", hex.EncodeToString(b))
-		sc.agentID = agentID
+		clientID = fmt.Sprintf("client-%s", hex.EncodeToString(b))
+		sc.clientID = clientID
 	} else {
-		sc.agentID = agentID
+		sc.clientID = clientID
 	}
 
-	reg := &pb.AgentMessage{
-		Message: &pb.AgentMessage_Register{
-			Register: &pb.AgentRegister{
-				AgentId: sc.agentID,
+	reg := &pb.ClientMessage{
+		Message: &pb.ClientMessage_Register{
+			Register: &pb.ClientRegister{
+				ClientId: sc.clientID,
 			},
 		},
 	}
@@ -127,14 +127,14 @@ func (sc *ServerConnection) register() error {
 		return fmt.Errorf("failed to send registration: %w", err)
 	}
 
-	sc.logger.Info("registration sent", logger.String("agent_id", sc.agentID))
+	sc.logger.Info("registration sent", logger.String("client_id", sc.clientID))
 
 	msg, err := sc.stream.Recv()
 	if err != nil {
 		return fmt.Errorf("failed to read registration response: %w", err)
 	}
 
-	ack, ok := msg.Message.(*pb.AgentMessage_Ack)
+	ack, ok := msg.Message.(*pb.ClientMessage_Ack)
 	if !ok {
 		return fmt.Errorf("unexpected response type: %T", msg.Message)
 	}
@@ -170,9 +170,9 @@ func (sc *ServerConnection) readLoop() {
 		}
 
 		switch m := msg.Message.(type) {
-		case *pb.AgentMessage_Packet:
+		case *pb.ClientMessage_Packet:
 			sc.handlePacket(m.Packet)
-		case *pb.AgentMessage_Heartbeat:
+		case *pb.ClientMessage_Heartbeat:
 			sc.logger.Debug("heartbeat received")
 		default:
 			sc.logger.Warn("unexpected message type",
@@ -195,8 +195,8 @@ func (sc *ServerConnection) writeLoop() {
 			return
 
 		case packet := <-sc.packetChan:
-			msg := &pb.AgentMessage{
-				Message: &pb.AgentMessage_Packet{
+			msg := &pb.ClientMessage{
+				Message: &pb.ClientMessage_Packet{
 					Packet: packet,
 				},
 			}
@@ -208,10 +208,10 @@ func (sc *ServerConnection) writeLoop() {
 			}
 
 		case <-heartbeatTicker.C:
-			msg := &pb.AgentMessage{
-				Message: &pb.AgentMessage_Heartbeat{
+			msg := &pb.ClientMessage{
+				Message: &pb.ClientMessage_Heartbeat{
 					Heartbeat: &pb.Heartbeat{
-						SenderId:  sc.agentID,
+						SenderId:  sc.clientID,
 						Timestamp: time.Now().Unix(),
 					},
 				},

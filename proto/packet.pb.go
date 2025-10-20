@@ -77,8 +77,8 @@ type Direction int32
 
 const (
 	Direction_DIRECTION_UNSPECIFIED Direction = 0
-	Direction_DIRECTION_FORWARD     Direction = 1 // Agent -> Server -> Target
-	Direction_DIRECTION_REVERSE     Direction = 2 // Target -> Server -> Agent
+	Direction_DIRECTION_FORWARD     Direction = 1 // Client -> Server -> Target
+	Direction_DIRECTION_REVERSE     Direction = 2 // Target -> Server -> Client
 )
 
 // Enum value maps for Direction.
@@ -126,8 +126,8 @@ type MessageType int32
 
 const (
 	MessageType_MESSAGE_TYPE_UNSPECIFIED MessageType = 0
-	MessageType_AGENT_REGISTER           MessageType = 1
-	MessageType_IMPLANT_REGISTER         MessageType = 2
+	MessageType_CLIENT_REGISTER          MessageType = 1
+	MessageType_PROXY_REGISTER           MessageType = 2
 	MessageType_REGISTER_ACK             MessageType = 3
 	MessageType_PACKET                   MessageType = 4
 	MessageType_HEARTBEAT                MessageType = 5
@@ -137,16 +137,16 @@ const (
 var (
 	MessageType_name = map[int32]string{
 		0: "MESSAGE_TYPE_UNSPECIFIED",
-		1: "AGENT_REGISTER",
-		2: "IMPLANT_REGISTER",
+		1: "CLIENT_REGISTER",
+		2: "PROXY_REGISTER",
 		3: "REGISTER_ACK",
 		4: "PACKET",
 		5: "HEARTBEAT",
 	}
 	MessageType_value = map[string]int32{
 		"MESSAGE_TYPE_UNSPECIFIED": 0,
-		"AGENT_REGISTER":           1,
-		"IMPLANT_REGISTER":         2,
+		"CLIENT_REGISTER":          1,
+		"PROXY_REGISTER":           2,
 		"REGISTER_ACK":             3,
 		"PACKET":                   4,
 		"HEARTBEAT":                5,
@@ -332,27 +332,27 @@ func (x *Packet) GetTimestamp() int64 {
 	return 0
 }
 
-type AgentRegister struct {
+type ClientRegister struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	AgentId       string                 `protobuf:"bytes,1,opt,name=agent_id,json=agentId,proto3" json:"agent_id,omitempty"`
+	ClientId      string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *AgentRegister) Reset() {
-	*x = AgentRegister{}
+func (x *ClientRegister) Reset() {
+	*x = ClientRegister{}
 	mi := &file_proto_packet_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *AgentRegister) String() string {
+func (x *ClientRegister) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AgentRegister) ProtoMessage() {}
+func (*ClientRegister) ProtoMessage() {}
 
-func (x *AgentRegister) ProtoReflect() protoreflect.Message {
+func (x *ClientRegister) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_packet_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -364,40 +364,40 @@ func (x *AgentRegister) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AgentRegister.ProtoReflect.Descriptor instead.
-func (*AgentRegister) Descriptor() ([]byte, []int) {
+// Deprecated: Use ClientRegister.ProtoReflect.Descriptor instead.
+func (*ClientRegister) Descriptor() ([]byte, []int) {
 	return file_proto_packet_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *AgentRegister) GetAgentId() string {
+func (x *ClientRegister) GetClientId() string {
 	if x != nil {
-		return x.AgentId
+		return x.ClientId
 	}
 	return ""
 }
 
-type ImplantRegister struct {
+type ProxyRegister struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ImplantId     string                 `protobuf:"bytes,1,opt,name=implant_id,json=implantId,proto3" json:"implant_id,omitempty"`
+	ProxyId       string                 `protobuf:"bytes,1,opt,name=proxy_id,json=proxyId,proto3" json:"proxy_id,omitempty"`
 	ManagedCidr   string                 `protobuf:"bytes,2,opt,name=managed_cidr,json=managedCidr,proto3" json:"managed_cidr,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ImplantRegister) Reset() {
-	*x = ImplantRegister{}
+func (x *ProxyRegister) Reset() {
+	*x = ProxyRegister{}
 	mi := &file_proto_packet_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ImplantRegister) String() string {
+func (x *ProxyRegister) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ImplantRegister) ProtoMessage() {}
+func (*ProxyRegister) ProtoMessage() {}
 
-func (x *ImplantRegister) ProtoReflect() protoreflect.Message {
+func (x *ProxyRegister) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_packet_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -409,19 +409,19 @@ func (x *ImplantRegister) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ImplantRegister.ProtoReflect.Descriptor instead.
-func (*ImplantRegister) Descriptor() ([]byte, []int) {
+// Deprecated: Use ProxyRegister.ProtoReflect.Descriptor instead.
+func (*ProxyRegister) Descriptor() ([]byte, []int) {
 	return file_proto_packet_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *ImplantRegister) GetImplantId() string {
+func (x *ProxyRegister) GetProxyId() string {
 	if x != nil {
-		return x.ImplantId
+		return x.ProxyId
 	}
 	return ""
 }
 
-func (x *ImplantRegister) GetManagedCidr() string {
+func (x *ProxyRegister) GetManagedCidr() string {
 	if x != nil {
 		return x.ManagedCidr
 	}
@@ -584,33 +584,33 @@ func (x *Envelope) GetPayload() []byte {
 	return nil
 }
 
-type AgentMessage struct {
+type ClientMessage struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Types that are valid to be assigned to Message:
 	//
-	//	*AgentMessage_Register
-	//	*AgentMessage_Packet
-	//	*AgentMessage_Heartbeat
-	//	*AgentMessage_Ack
-	Message       isAgentMessage_Message `protobuf_oneof:"message"`
+	//	*ClientMessage_Register
+	//	*ClientMessage_Packet
+	//	*ClientMessage_Heartbeat
+	//	*ClientMessage_Ack
+	Message       isClientMessage_Message `protobuf_oneof:"message"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *AgentMessage) Reset() {
-	*x = AgentMessage{}
+func (x *ClientMessage) Reset() {
+	*x = ClientMessage{}
 	mi := &file_proto_packet_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *AgentMessage) String() string {
+func (x *ClientMessage) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AgentMessage) ProtoMessage() {}
+func (*ClientMessage) ProtoMessage() {}
 
-func (x *AgentMessage) ProtoReflect() protoreflect.Message {
+func (x *ClientMessage) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_packet_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -622,109 +622,109 @@ func (x *AgentMessage) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AgentMessage.ProtoReflect.Descriptor instead.
-func (*AgentMessage) Descriptor() ([]byte, []int) {
+// Deprecated: Use ClientMessage.ProtoReflect.Descriptor instead.
+func (*ClientMessage) Descriptor() ([]byte, []int) {
 	return file_proto_packet_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *AgentMessage) GetMessage() isAgentMessage_Message {
+func (x *ClientMessage) GetMessage() isClientMessage_Message {
 	if x != nil {
 		return x.Message
 	}
 	return nil
 }
 
-func (x *AgentMessage) GetRegister() *AgentRegister {
+func (x *ClientMessage) GetRegister() *ClientRegister {
 	if x != nil {
-		if x, ok := x.Message.(*AgentMessage_Register); ok {
+		if x, ok := x.Message.(*ClientMessage_Register); ok {
 			return x.Register
 		}
 	}
 	return nil
 }
 
-func (x *AgentMessage) GetPacket() *Packet {
+func (x *ClientMessage) GetPacket() *Packet {
 	if x != nil {
-		if x, ok := x.Message.(*AgentMessage_Packet); ok {
+		if x, ok := x.Message.(*ClientMessage_Packet); ok {
 			return x.Packet
 		}
 	}
 	return nil
 }
 
-func (x *AgentMessage) GetHeartbeat() *Heartbeat {
+func (x *ClientMessage) GetHeartbeat() *Heartbeat {
 	if x != nil {
-		if x, ok := x.Message.(*AgentMessage_Heartbeat); ok {
+		if x, ok := x.Message.(*ClientMessage_Heartbeat); ok {
 			return x.Heartbeat
 		}
 	}
 	return nil
 }
 
-func (x *AgentMessage) GetAck() *RegisterAck {
+func (x *ClientMessage) GetAck() *RegisterAck {
 	if x != nil {
-		if x, ok := x.Message.(*AgentMessage_Ack); ok {
+		if x, ok := x.Message.(*ClientMessage_Ack); ok {
 			return x.Ack
 		}
 	}
 	return nil
 }
 
-type isAgentMessage_Message interface {
-	isAgentMessage_Message()
+type isClientMessage_Message interface {
+	isClientMessage_Message()
 }
 
-type AgentMessage_Register struct {
-	Register *AgentRegister `protobuf:"bytes,1,opt,name=register,proto3,oneof"`
+type ClientMessage_Register struct {
+	Register *ClientRegister `protobuf:"bytes,1,opt,name=register,proto3,oneof"`
 }
 
-type AgentMessage_Packet struct {
+type ClientMessage_Packet struct {
 	Packet *Packet `protobuf:"bytes,2,opt,name=packet,proto3,oneof"`
 }
 
-type AgentMessage_Heartbeat struct {
+type ClientMessage_Heartbeat struct {
 	Heartbeat *Heartbeat `protobuf:"bytes,3,opt,name=heartbeat,proto3,oneof"`
 }
 
-type AgentMessage_Ack struct {
+type ClientMessage_Ack struct {
 	Ack *RegisterAck `protobuf:"bytes,4,opt,name=ack,proto3,oneof"`
 }
 
-func (*AgentMessage_Register) isAgentMessage_Message() {}
+func (*ClientMessage_Register) isClientMessage_Message() {}
 
-func (*AgentMessage_Packet) isAgentMessage_Message() {}
+func (*ClientMessage_Packet) isClientMessage_Message() {}
 
-func (*AgentMessage_Heartbeat) isAgentMessage_Message() {}
+func (*ClientMessage_Heartbeat) isClientMessage_Message() {}
 
-func (*AgentMessage_Ack) isAgentMessage_Message() {}
+func (*ClientMessage_Ack) isClientMessage_Message() {}
 
-type ImplantMessage struct {
+type ProxyMessage struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Types that are valid to be assigned to Message:
 	//
-	//	*ImplantMessage_Register
-	//	*ImplantMessage_Packet
-	//	*ImplantMessage_Heartbeat
-	//	*ImplantMessage_Ack
-	Message       isImplantMessage_Message `protobuf_oneof:"message"`
+	//	*ProxyMessage_Register
+	//	*ProxyMessage_Packet
+	//	*ProxyMessage_Heartbeat
+	//	*ProxyMessage_Ack
+	Message       isProxyMessage_Message `protobuf_oneof:"message"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ImplantMessage) Reset() {
-	*x = ImplantMessage{}
+func (x *ProxyMessage) Reset() {
+	*x = ProxyMessage{}
 	mi := &file_proto_packet_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ImplantMessage) String() string {
+func (x *ProxyMessage) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ImplantMessage) ProtoMessage() {}
+func (*ProxyMessage) ProtoMessage() {}
 
-func (x *ImplantMessage) ProtoReflect() protoreflect.Message {
+func (x *ProxyMessage) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_packet_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -736,81 +736,81 @@ func (x *ImplantMessage) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ImplantMessage.ProtoReflect.Descriptor instead.
-func (*ImplantMessage) Descriptor() ([]byte, []int) {
+// Deprecated: Use ProxyMessage.ProtoReflect.Descriptor instead.
+func (*ProxyMessage) Descriptor() ([]byte, []int) {
 	return file_proto_packet_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *ImplantMessage) GetMessage() isImplantMessage_Message {
+func (x *ProxyMessage) GetMessage() isProxyMessage_Message {
 	if x != nil {
 		return x.Message
 	}
 	return nil
 }
 
-func (x *ImplantMessage) GetRegister() *ImplantRegister {
+func (x *ProxyMessage) GetRegister() *ProxyRegister {
 	if x != nil {
-		if x, ok := x.Message.(*ImplantMessage_Register); ok {
+		if x, ok := x.Message.(*ProxyMessage_Register); ok {
 			return x.Register
 		}
 	}
 	return nil
 }
 
-func (x *ImplantMessage) GetPacket() *Packet {
+func (x *ProxyMessage) GetPacket() *Packet {
 	if x != nil {
-		if x, ok := x.Message.(*ImplantMessage_Packet); ok {
+		if x, ok := x.Message.(*ProxyMessage_Packet); ok {
 			return x.Packet
 		}
 	}
 	return nil
 }
 
-func (x *ImplantMessage) GetHeartbeat() *Heartbeat {
+func (x *ProxyMessage) GetHeartbeat() *Heartbeat {
 	if x != nil {
-		if x, ok := x.Message.(*ImplantMessage_Heartbeat); ok {
+		if x, ok := x.Message.(*ProxyMessage_Heartbeat); ok {
 			return x.Heartbeat
 		}
 	}
 	return nil
 }
 
-func (x *ImplantMessage) GetAck() *RegisterAck {
+func (x *ProxyMessage) GetAck() *RegisterAck {
 	if x != nil {
-		if x, ok := x.Message.(*ImplantMessage_Ack); ok {
+		if x, ok := x.Message.(*ProxyMessage_Ack); ok {
 			return x.Ack
 		}
 	}
 	return nil
 }
 
-type isImplantMessage_Message interface {
-	isImplantMessage_Message()
+type isProxyMessage_Message interface {
+	isProxyMessage_Message()
 }
 
-type ImplantMessage_Register struct {
-	Register *ImplantRegister `protobuf:"bytes,1,opt,name=register,proto3,oneof"`
+type ProxyMessage_Register struct {
+	Register *ProxyRegister `protobuf:"bytes,1,opt,name=register,proto3,oneof"`
 }
 
-type ImplantMessage_Packet struct {
+type ProxyMessage_Packet struct {
 	Packet *Packet `protobuf:"bytes,2,opt,name=packet,proto3,oneof"`
 }
 
-type ImplantMessage_Heartbeat struct {
+type ProxyMessage_Heartbeat struct {
 	Heartbeat *Heartbeat `protobuf:"bytes,3,opt,name=heartbeat,proto3,oneof"`
 }
 
-type ImplantMessage_Ack struct {
+type ProxyMessage_Ack struct {
 	Ack *RegisterAck `protobuf:"bytes,4,opt,name=ack,proto3,oneof"`
 }
 
-func (*ImplantMessage_Register) isImplantMessage_Message() {}
+func (*ProxyMessage_Register) isProxyMessage_Message() {}
 
-func (*ImplantMessage_Packet) isImplantMessage_Message() {}
+func (*ProxyMessage_Packet) isProxyMessage_Message() {}
 
-func (*ImplantMessage_Heartbeat) isImplantMessage_Message() {}
+func (*ProxyMessage_Heartbeat) isProxyMessage_Message() {}
 
-func (*ImplantMessage_Ack) isImplantMessage_Message() {}
+func (*ProxyMessage_Ack) isProxyMessage_Message() {}
 
 var File_proto_packet_proto protoreflect.FileDescriptor
 
@@ -829,12 +829,11 @@ const file_proto_packet_proto_rawDesc = "" +
 	"conn_tuple\x18\x03 \x01(\v2\x16.proto.ConnectionTupleR\tconnTuple\x12+\n" +
 	"\bprotocol\x18\x04 \x01(\x0e2\x0f.proto.ProtocolR\bprotocol\x12.\n" +
 	"\tdirection\x18\x05 \x01(\x0e2\x10.proto.DirectionR\tdirection\x12\x1c\n" +
-	"\ttimestamp\x18\x06 \x01(\x03R\ttimestamp\"*\n" +
-	"\rAgentRegister\x12\x19\n" +
-	"\bagent_id\x18\x01 \x01(\tR\aagentId\"S\n" +
-	"\x0fImplantRegister\x12\x1d\n" +
-	"\n" +
-	"implant_id\x18\x01 \x01(\tR\timplantId\x12!\n" +
+	"\ttimestamp\x18\x06 \x01(\x03R\ttimestamp\"-\n" +
+	"\x0eClientRegister\x12\x1b\n" +
+	"\tclient_id\x18\x01 \x01(\tR\bclientId\"M\n" +
+	"\rProxyRegister\x12\x19\n" +
+	"\bproxy_id\x18\x01 \x01(\tR\aproxyId\x12!\n" +
 	"\fmanaged_cidr\x18\x02 \x01(\tR\vmanagedCidr\"A\n" +
 	"\vRegisterAck\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
@@ -844,15 +843,15 @@ const file_proto_packet_proto_rawDesc = "" +
 	"\ttimestamp\x18\x02 \x01(\x03R\ttimestamp\"L\n" +
 	"\bEnvelope\x12&\n" +
 	"\x04type\x18\x01 \x01(\x0e2\x12.proto.MessageTypeR\x04type\x12\x18\n" +
-	"\apayload\x18\x02 \x01(\fR\apayload\"\xd0\x01\n" +
-	"\fAgentMessage\x122\n" +
-	"\bregister\x18\x01 \x01(\v2\x14.proto.AgentRegisterH\x00R\bregister\x12'\n" +
+	"\apayload\x18\x02 \x01(\fR\apayload\"\xd2\x01\n" +
+	"\rClientMessage\x123\n" +
+	"\bregister\x18\x01 \x01(\v2\x15.proto.ClientRegisterH\x00R\bregister\x12'\n" +
 	"\x06packet\x18\x02 \x01(\v2\r.proto.PacketH\x00R\x06packet\x120\n" +
 	"\theartbeat\x18\x03 \x01(\v2\x10.proto.HeartbeatH\x00R\theartbeat\x12&\n" +
 	"\x03ack\x18\x04 \x01(\v2\x12.proto.RegisterAckH\x00R\x03ackB\t\n" +
-	"\amessage\"\xd4\x01\n" +
-	"\x0eImplantMessage\x124\n" +
-	"\bregister\x18\x01 \x01(\v2\x16.proto.ImplantRegisterH\x00R\bregister\x12'\n" +
+	"\amessage\"\xd0\x01\n" +
+	"\fProxyMessage\x122\n" +
+	"\bregister\x18\x01 \x01(\v2\x14.proto.ProxyRegisterH\x00R\bregister\x12'\n" +
 	"\x06packet\x18\x02 \x01(\v2\r.proto.PacketH\x00R\x06packet\x120\n" +
 	"\theartbeat\x18\x03 \x01(\v2\x10.proto.HeartbeatH\x00R\theartbeat\x12&\n" +
 	"\x03ack\x18\x04 \x01(\v2\x12.proto.RegisterAckH\x00R\x03ackB\t\n" +
@@ -865,19 +864,19 @@ const file_proto_packet_proto_rawDesc = "" +
 	"\tDirection\x12\x19\n" +
 	"\x15DIRECTION_UNSPECIFIED\x10\x00\x12\x15\n" +
 	"\x11DIRECTION_FORWARD\x10\x01\x12\x15\n" +
-	"\x11DIRECTION_REVERSE\x10\x02*\x82\x01\n" +
+	"\x11DIRECTION_REVERSE\x10\x02*\x81\x01\n" +
 	"\vMessageType\x12\x1c\n" +
-	"\x18MESSAGE_TYPE_UNSPECIFIED\x10\x00\x12\x12\n" +
-	"\x0eAGENT_REGISTER\x10\x01\x12\x14\n" +
-	"\x10IMPLANT_REGISTER\x10\x02\x12\x10\n" +
+	"\x18MESSAGE_TYPE_UNSPECIFIED\x10\x00\x12\x13\n" +
+	"\x0fCLIENT_REGISTER\x10\x01\x12\x12\n" +
+	"\x0ePROXY_REGISTER\x10\x02\x12\x10\n" +
 	"\fREGISTER_ACK\x10\x03\x12\n" +
 	"\n" +
 	"\x06PACKET\x10\x04\x12\r\n" +
-	"\tHEARTBEAT\x10\x052F\n" +
-	"\vTunnelAgent\x127\n" +
-	"\aConnect\x12\x13.proto.AgentMessage\x1a\x13.proto.AgentMessage(\x010\x012L\n" +
-	"\rTunnelImplant\x12;\n" +
-	"\aConnect\x12\x15.proto.ImplantMessage\x1a\x15.proto.ImplantMessage(\x010\x01B\x18Z\x16network-tunneler/protob\x06proto3"
+	"\tHEARTBEAT\x10\x052I\n" +
+	"\fTunnelClient\x129\n" +
+	"\aConnect\x12\x14.proto.ClientMessage\x1a\x14.proto.ClientMessage(\x010\x012F\n" +
+	"\vTunnelProxy\x127\n" +
+	"\aConnect\x12\x13.proto.ProxyMessage\x1a\x13.proto.ProxyMessage(\x010\x01B\x18Z\x16network-tunneler/protob\x06proto3"
 
 var (
 	file_proto_packet_proto_rawDescOnce sync.Once
@@ -899,31 +898,31 @@ var file_proto_packet_proto_goTypes = []any{
 	(MessageType)(0),        // 2: proto.MessageType
 	(*ConnectionTuple)(nil), // 3: proto.ConnectionTuple
 	(*Packet)(nil),          // 4: proto.Packet
-	(*AgentRegister)(nil),   // 5: proto.AgentRegister
-	(*ImplantRegister)(nil), // 6: proto.ImplantRegister
+	(*ClientRegister)(nil),  // 5: proto.ClientRegister
+	(*ProxyRegister)(nil),   // 6: proto.ProxyRegister
 	(*RegisterAck)(nil),     // 7: proto.RegisterAck
 	(*Heartbeat)(nil),       // 8: proto.Heartbeat
 	(*Envelope)(nil),        // 9: proto.Envelope
-	(*AgentMessage)(nil),    // 10: proto.AgentMessage
-	(*ImplantMessage)(nil),  // 11: proto.ImplantMessage
+	(*ClientMessage)(nil),   // 10: proto.ClientMessage
+	(*ProxyMessage)(nil),    // 11: proto.ProxyMessage
 }
 var file_proto_packet_proto_depIdxs = []int32{
 	3,  // 0: proto.Packet.conn_tuple:type_name -> proto.ConnectionTuple
 	0,  // 1: proto.Packet.protocol:type_name -> proto.Protocol
 	1,  // 2: proto.Packet.direction:type_name -> proto.Direction
 	2,  // 3: proto.Envelope.type:type_name -> proto.MessageType
-	5,  // 4: proto.AgentMessage.register:type_name -> proto.AgentRegister
-	4,  // 5: proto.AgentMessage.packet:type_name -> proto.Packet
-	8,  // 6: proto.AgentMessage.heartbeat:type_name -> proto.Heartbeat
-	7,  // 7: proto.AgentMessage.ack:type_name -> proto.RegisterAck
-	6,  // 8: proto.ImplantMessage.register:type_name -> proto.ImplantRegister
-	4,  // 9: proto.ImplantMessage.packet:type_name -> proto.Packet
-	8,  // 10: proto.ImplantMessage.heartbeat:type_name -> proto.Heartbeat
-	7,  // 11: proto.ImplantMessage.ack:type_name -> proto.RegisterAck
-	10, // 12: proto.TunnelAgent.Connect:input_type -> proto.AgentMessage
-	11, // 13: proto.TunnelImplant.Connect:input_type -> proto.ImplantMessage
-	10, // 14: proto.TunnelAgent.Connect:output_type -> proto.AgentMessage
-	11, // 15: proto.TunnelImplant.Connect:output_type -> proto.ImplantMessage
+	5,  // 4: proto.ClientMessage.register:type_name -> proto.ClientRegister
+	4,  // 5: proto.ClientMessage.packet:type_name -> proto.Packet
+	8,  // 6: proto.ClientMessage.heartbeat:type_name -> proto.Heartbeat
+	7,  // 7: proto.ClientMessage.ack:type_name -> proto.RegisterAck
+	6,  // 8: proto.ProxyMessage.register:type_name -> proto.ProxyRegister
+	4,  // 9: proto.ProxyMessage.packet:type_name -> proto.Packet
+	8,  // 10: proto.ProxyMessage.heartbeat:type_name -> proto.Heartbeat
+	7,  // 11: proto.ProxyMessage.ack:type_name -> proto.RegisterAck
+	10, // 12: proto.TunnelClient.Connect:input_type -> proto.ClientMessage
+	11, // 13: proto.TunnelProxy.Connect:input_type -> proto.ProxyMessage
+	10, // 14: proto.TunnelClient.Connect:output_type -> proto.ClientMessage
+	11, // 15: proto.TunnelProxy.Connect:output_type -> proto.ProxyMessage
 	14, // [14:16] is the sub-list for method output_type
 	12, // [12:14] is the sub-list for method input_type
 	12, // [12:12] is the sub-list for extension type_name
@@ -937,16 +936,16 @@ func file_proto_packet_proto_init() {
 		return
 	}
 	file_proto_packet_proto_msgTypes[7].OneofWrappers = []any{
-		(*AgentMessage_Register)(nil),
-		(*AgentMessage_Packet)(nil),
-		(*AgentMessage_Heartbeat)(nil),
-		(*AgentMessage_Ack)(nil),
+		(*ClientMessage_Register)(nil),
+		(*ClientMessage_Packet)(nil),
+		(*ClientMessage_Heartbeat)(nil),
+		(*ClientMessage_Ack)(nil),
 	}
 	file_proto_packet_proto_msgTypes[8].OneofWrappers = []any{
-		(*ImplantMessage_Register)(nil),
-		(*ImplantMessage_Packet)(nil),
-		(*ImplantMessage_Heartbeat)(nil),
-		(*ImplantMessage_Ack)(nil),
+		(*ProxyMessage_Register)(nil),
+		(*ProxyMessage_Packet)(nil),
+		(*ProxyMessage_Heartbeat)(nil),
+		(*ProxyMessage_Ack)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

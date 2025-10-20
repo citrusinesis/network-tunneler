@@ -138,9 +138,9 @@
         };
 
         packages = rec {
-          agent = buildGoBinary {
-            name = "tunneler-agent";
-            subPackage = "cmd/agent";
+          client = buildGoBinary {
+            name = "tunneler-client";
+            subPackage = "cmd/client";
           };
 
           server = buildGoBinary {
@@ -148,24 +148,24 @@
             subPackage = "cmd/server";
           };
 
-          implant = buildGoBinary {
-            name = "tunneler-implant";
-            subPackage = "cmd/implant";
+          proxy = buildGoBinary {
+            name = "tunneler-proxy";
+            subPackage = "cmd/proxy";
           };
 
           default = pkgs.symlinkJoin {
             name = "tunneler-all";
             paths = [
-              agent
+              client
               server
-              implant
+              proxy
             ];
           };
 
-          docker-agent = buildDockerImage {
-            name = "tunneler-agent";
-            binary = agent;
-            cmd = "${agent}/bin/tunneler-agent --server server:8080 --cidr 100.64.0.0/10";
+          docker-client = buildDockerImage {
+            name = "tunneler-client";
+            binary = client;
+            cmd = "${client}/bin/tunneler-client --server server:8080 --cidr 100.64.0.0/10";
           };
 
           docker-server = buildDockerImage {
@@ -175,10 +175,10 @@
             expose = [ "8080" ];
           };
 
-          docker-implant = buildDockerImage {
-            name = "tunneler-implant";
-            binary = implant;
-            cmd = "${implant}/bin/tunneler-implant";
+          docker-proxy = buildDockerImage {
+            name = "tunneler-proxy";
+            binary = proxy;
+            cmd = "${proxy}/bin/tunneler-proxy";
           };
         };
       }

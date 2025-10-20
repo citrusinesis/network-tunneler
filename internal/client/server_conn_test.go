@@ -1,4 +1,4 @@
-package agent
+package client
 
 import (
 	"context"
@@ -14,14 +14,14 @@ import (
 	pb "network-tunneler/proto"
 )
 
-type mockAgentServer struct {
-	pb.UnimplementedTunnelAgentServer
-	registerChan chan *pb.AgentRegister
+type mockClientServer struct {
+	pb.UnimplementedTunnelClientServer
+	registerChan chan *pb.ClientRegister
 	packetChan   chan *pb.Packet
-	stream       pb.TunnelAgent_ConnectServer
+	stream       pb.TunnelClient_ConnectServer
 }
 
-func (m *mockAgentServer) Connect(stream pb.TunnelAgent_ConnectServer) error {
+func (m *mockClientServer) Connect(stream pb.TunnelClient_ConnectServer) error {
 	m.stream = stream
 
 	for {
@@ -31,10 +31,10 @@ func (m *mockAgentServer) Connect(stream pb.TunnelAgent_ConnectServer) error {
 		}
 
 		switch msg := msg.Message.(type) {
-		case *pb.AgentMessage_Register:
+		case *pb.ClientMessage_Register:
 			m.registerChan <- msg.Register
-			ack := &pb.AgentMessage{
-				Message: &pb.AgentMessage_Ack{
+			ack := &pb.ClientMessage{
+				Message: &pb.ClientMessage_Ack{
 					Ack: &pb.RegisterAck{
 						Success: true,
 						Message: "registered successfully",
@@ -45,13 +45,13 @@ func (m *mockAgentServer) Connect(stream pb.TunnelAgent_ConnectServer) error {
 				return err
 			}
 
-		case *pb.AgentMessage_Packet:
+		case *pb.ClientMessage_Packet:
 			m.packetChan <- msg.Packet
 		}
 	}
 }
 
-func setupMockServer(t *testing.T) (*grpc.Server, string, *mockAgentServer) {
+func setupMockServer(t *testing.T) (*grpc.Server, string, *mockClientServer) {
 	lis, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("failed to listen: %v", err)
@@ -59,12 +59,12 @@ func setupMockServer(t *testing.T) (*grpc.Server, string, *mockAgentServer) {
 
 	server := grpc.NewServer()
 
-	mock := &mockAgentServer{
-		registerChan: make(chan *pb.AgentRegister, 1),
+	mock := &mockClientServer{
+		registerChan: make(chan *pb.ClientRegister, 1),
 		packetChan:   make(chan *pb.Packet, 10),
 	}
 
-	pb.RegisterTunnelAgentServer(server, mock)
+	pb.RegisterTunnelClientServer(server, mock)
 
 	go server.Serve(lis)
 
@@ -73,7 +73,7 @@ func setupMockServer(t *testing.T) (*grpc.Server, string, *mockAgentServer) {
 
 func newTestServerConnection(addr string, tracker *ConnectionTracker, log logger.Logger) *ServerConnection {
 	cfg := &Config{
-		AgentID:    "",
+		ClientID:    "",
 		ServerAddr: addr,
 	}
 	return &ServerConnection{
@@ -107,11 +107,11 @@ func TestServerConnection_Connect(t *testing.T) {
 
 	select {
 	case reg := <-mock.registerChan:
-		if !strings.HasPrefix(reg.AgentId, "agent-") {
-			t.Errorf("expected agent_id to have prefix 'agent-', got %s", reg.AgentId)
+		if !strings.HasPrefix(reg.ClientId, "client-") {
+			t.Errorf("expected client_id to have prefix 'client-', got %s", reg.ClientId)
 		}
-		if len(reg.AgentId) != 22 {
-			t.Errorf("expected agent_id length 22, got %d", len(reg.AgentId))
+		if len(reg.ClientId) != 22 {
+			t.Errorf("expected client_id length 22, got %d", len(reg.ClientId))
 		}
 	case <-time.After(2 * time.Second):
 		t.Fatal("timeout waiting for registration")
@@ -182,8 +182,8 @@ func TestServerConnection_ReceivePacket(t *testing.T) {
 	tracker.Track(connID, "192.168.1.1:80", mockConn)
 
 	responseData := []byte("response data")
-	responsePacket := &pb.AgentMessage{
-		Message: &pb.AgentMessage_Packet{
+	responsePacket := &pb.ClientMessage{
+		Message: &pb.ClientMessage_Packet{
 			Packet: &pb.Packet{
 				ConnectionId: connID,
 				Data:         responseData,

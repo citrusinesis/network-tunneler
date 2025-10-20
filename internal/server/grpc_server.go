@@ -19,11 +19,11 @@ type GRPCServer struct {
 	logger         logger.Logger
 	tlsConfig      *tls.Config
 	registry       *Registry
-	agentService   *AgentService
-	implantService *ImplantService
+	clientService   *ClientService
+	proxyService *ProxyService
 
-	agentServer   *grpc.Server
-	implantServer *grpc.Server
+	clientServer   *grpc.Server
+	proxyServer *grpc.Server
 
 	wg sync.WaitGroup
 }
@@ -39,52 +39,52 @@ func NewGRPCServer(
 		logger:         log.With(logger.String("component", "grpc-server")),
 		tlsConfig:      tlsConfig,
 		registry:       registry,
-		agentService:   NewAgentService(registry, log),
-		implantService: NewImplantService(registry, log),
+		clientService:   NewClientService(registry, log),
+		proxyService: NewProxyService(registry, log),
 	}
 }
 
 func (s *GRPCServer) Start(ctx context.Context) error {
 	creds := credentials.NewTLS(s.tlsConfig)
 
-	s.agentServer = grpc.NewServer(grpc.Creds(creds))
-	pb.RegisterTunnelAgentServer(s.agentServer, s.agentService)
+	s.clientServer = grpc.NewServer(grpc.Creds(creds))
+	pb.RegisterTunnelClientServer(s.clientServer, s.clientService)
 
-	s.implantServer = grpc.NewServer(grpc.Creds(creds))
-	pb.RegisterTunnelImplantServer(s.implantServer, s.implantService)
+	s.proxyServer = grpc.NewServer(grpc.Creds(creds))
+	pb.RegisterTunnelProxyServer(s.proxyServer, s.proxyService)
 
-	agentLis, err := net.Listen("tcp", s.cfg.AgentListenAddr)
+	clientLis, err := net.Listen("tcp", s.cfg.ClientListenAddr)
 	if err != nil {
-		return fmt.Errorf("failed to listen for agents: %w", err)
+		return fmt.Errorf("failed to listen for clients: %w", err)
 	}
 
-	implantLis, err := net.Listen("tcp", s.cfg.ImplantListenAddr)
+	proxyLis, err := net.Listen("tcp", s.cfg.ProxyListenAddr)
 	if err != nil {
-		agentLis.Close()
-		return fmt.Errorf("failed to listen for implants: %w", err)
+		clientLis.Close()
+		return fmt.Errorf("failed to listen for proxys: %w", err)
 	}
 
 	s.logger.Info("gRPC servers starting",
-		logger.String("agent_addr", s.cfg.AgentListenAddr),
-		logger.String("implant_addr", s.cfg.ImplantListenAddr),
+		logger.String("client_addr", s.cfg.ClientListenAddr),
+		logger.String("proxy_addr", s.cfg.ProxyListenAddr),
 	)
 
 	s.wg.Add(2)
 
 	go func() {
 		defer s.wg.Done()
-		if err := s.agentServer.Serve(agentLis); err != nil {
-			s.logger.Error("agent gRPC server error", logger.Error(err))
+		if err := s.clientServer.Serve(clientLis); err != nil {
+			s.logger.Error("client gRPC server error", logger.Error(err))
 		}
-		s.logger.Debug("agent gRPC server goroutine stopped")
+		s.logger.Debug("client gRPC server goroutine stopped")
 	}()
 
 	go func() {
 		defer s.wg.Done()
-		if err := s.implantServer.Serve(implantLis); err != nil {
-			s.logger.Error("implant gRPC server error", logger.Error(err))
+		if err := s.proxyServer.Serve(proxyLis); err != nil {
+			s.logger.Error("proxy gRPC server error", logger.Error(err))
 		}
-		s.logger.Debug("implant gRPC server goroutine stopped")
+		s.logger.Debug("proxy gRPC server goroutine stopped")
 	}()
 
 	s.logger.Info("gRPC servers started successfully")
@@ -97,11 +97,11 @@ func (s *GRPCServer) Stop(ctx context.Context) error {
 	// Use a goroutine to perform graceful stop with context timeout protection
 	done := make(chan struct{})
 	go func() {
-		if s.agentServer != nil {
-			s.agentServer.GracefulStop()
+		if s.clientServer != nil {
+			s.clientServer.GracefulStop()
 		}
-		if s.implantServer != nil {
-			s.implantServer.GracefulStop()
+		if s.proxyServer != nil {
+			s.proxyServer.GracefulStop()
 		}
 		close(done)
 	}()
@@ -113,11 +113,11 @@ func (s *GRPCServer) Stop(ctx context.Context) error {
 	case <-ctx.Done():
 		s.logger.Warn("context timeout during graceful stop, forcing shutdown")
 		// Force stop if graceful stop times out
-		if s.agentServer != nil {
-			s.agentServer.Stop()
+		if s.clientServer != nil {
+			s.clientServer.Stop()
 		}
-		if s.implantServer != nil {
-			s.implantServer.Stop()
+		if s.proxyServer != nil {
+			s.proxyServer.Stop()
 		}
 	}
 

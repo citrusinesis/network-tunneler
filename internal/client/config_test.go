@@ -1,4 +1,4 @@
-package agent
+package client
 
 import (
 	"os"
@@ -152,17 +152,17 @@ func TestLoadConfig_JSON(t *testing.T) {
 
 func TestLoadConfig_DotEnv(t *testing.T) {
 	t.Cleanup(func() {
-		os.Unsetenv("AGENT_SERVER_ADDR")
-		os.Unsetenv("AGENT_LISTEN_PORT")
-		os.Unsetenv("AGENT_TARGET_CIDR")
+		os.Unsetenv("CLIENT_SERVER_ADDR")
+		os.Unsetenv("CLIENT_LISTEN_PORT")
+		os.Unsetenv("CLIENT_TARGET_CIDR")
 	})
 
 	tmpDir := t.TempDir()
 	envPath := filepath.Join(tmpDir, ".env")
 
-	envContent := `AGENT_SERVER_ADDR=env.example.com:7777
-AGENT_LISTEN_PORT=3333
-AGENT_TARGET_CIDR=192.168.0.0/16
+	envContent := `CLIENT_SERVER_ADDR=env.example.com:7777
+CLIENT_LISTEN_PORT=3333
+CLIENT_TARGET_CIDR=192.168.0.0/16
 `
 	if err := os.WriteFile(envPath, []byte(envContent), 0644); err != nil {
 		t.Fatalf("failed to write .env: %v", err)
@@ -175,8 +175,8 @@ AGENT_TARGET_CIDR=192.168.0.0/16
 
 	t.Logf("Loaded ServerAddr: %s", cfg.ServerAddr)
 	t.Logf("Loaded ListenPort: %d", cfg.ListenPort)
-	t.Logf("ENV AGENT_SERVER_ADDR: %s", os.Getenv("AGENT_SERVER_ADDR"))
-	t.Logf("ENV AGENT_LISTEN_PORT: %s", os.Getenv("AGENT_LISTEN_PORT"))
+	t.Logf("ENV CLIENT_SERVER_ADDR: %s", os.Getenv("CLIENT_SERVER_ADDR"))
+	t.Logf("ENV CLIENT_LISTEN_PORT: %s", os.Getenv("CLIENT_LISTEN_PORT"))
 
 	if cfg.ServerAddr != "env.example.com:7777" {
 		t.Errorf("expected ServerAddr from env, got %s", cfg.ServerAddr)
@@ -188,9 +188,9 @@ AGENT_TARGET_CIDR=192.168.0.0/16
 
 func TestLoadConfigMultiple(t *testing.T) {
 	t.Cleanup(func() {
-		os.Unsetenv("AGENT_SERVER_ADDR")
-		os.Unsetenv("AGENT_LISTEN_PORT")
-		os.Unsetenv("AGENT_TARGET_CIDR")
+		os.Unsetenv("CLIENT_SERVER_ADDR")
+		os.Unsetenv("CLIENT_LISTEN_PORT")
+		os.Unsetenv("CLIENT_TARGET_CIDR")
 	})
 
 	tmpDir := t.TempDir()
@@ -205,8 +205,8 @@ listen_port: 1111
 	}
 
 	envPath := filepath.Join(tmpDir, ".env")
-	envContent := `AGENT_LISTEN_PORT=2222
-AGENT_TARGET_CIDR=10.0.0.0/8
+	envContent := `CLIENT_LISTEN_PORT=2222
+CLIENT_TARGET_CIDR=10.0.0.0/8
 `
 	if err := os.WriteFile(envPath, []byte(envContent), 0644); err != nil {
 		t.Fatalf("failed to write .env: %v", err)

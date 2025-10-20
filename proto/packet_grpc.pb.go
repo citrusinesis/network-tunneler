@@ -19,94 +19,94 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	TunnelAgent_Connect_FullMethodName = "/proto.TunnelAgent/Connect"
+	TunnelClient_Connect_FullMethodName = "/proto.TunnelClient/Connect"
 )
 
-// TunnelAgentClient is the client API for TunnelAgent service.
+// TunnelClientClient is the client API for TunnelClient service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type TunnelAgentClient interface {
-	Connect(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[AgentMessage, AgentMessage], error)
+type TunnelClientClient interface {
+	Connect(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[ClientMessage, ClientMessage], error)
 }
 
-type tunnelAgentClient struct {
+type tunnelClientClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewTunnelAgentClient(cc grpc.ClientConnInterface) TunnelAgentClient {
-	return &tunnelAgentClient{cc}
+func NewTunnelClientClient(cc grpc.ClientConnInterface) TunnelClientClient {
+	return &tunnelClientClient{cc}
 }
 
-func (c *tunnelAgentClient) Connect(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[AgentMessage, AgentMessage], error) {
+func (c *tunnelClientClient) Connect(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[ClientMessage, ClientMessage], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &TunnelAgent_ServiceDesc.Streams[0], TunnelAgent_Connect_FullMethodName, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &TunnelClient_ServiceDesc.Streams[0], TunnelClient_Connect_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[AgentMessage, AgentMessage]{ClientStream: stream}
+	x := &grpc.GenericClientStream[ClientMessage, ClientMessage]{ClientStream: stream}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type TunnelAgent_ConnectClient = grpc.BidiStreamingClient[AgentMessage, AgentMessage]
+type TunnelClient_ConnectClient = grpc.BidiStreamingClient[ClientMessage, ClientMessage]
 
-// TunnelAgentServer is the server API for TunnelAgent service.
-// All implementations must embed UnimplementedTunnelAgentServer
+// TunnelClientServer is the server API for TunnelClient service.
+// All implementations must embed UnimplementedTunnelClientServer
 // for forward compatibility.
-type TunnelAgentServer interface {
-	Connect(grpc.BidiStreamingServer[AgentMessage, AgentMessage]) error
-	mustEmbedUnimplementedTunnelAgentServer()
+type TunnelClientServer interface {
+	Connect(grpc.BidiStreamingServer[ClientMessage, ClientMessage]) error
+	mustEmbedUnimplementedTunnelClientServer()
 }
 
-// UnimplementedTunnelAgentServer must be embedded to have
+// UnimplementedTunnelClientServer must be embedded to have
 // forward compatible implementations.
 //
 // NOTE: this should be embedded by value instead of pointer to avoid a nil
 // pointer dereference when methods are called.
-type UnimplementedTunnelAgentServer struct{}
+type UnimplementedTunnelClientServer struct{}
 
-func (UnimplementedTunnelAgentServer) Connect(grpc.BidiStreamingServer[AgentMessage, AgentMessage]) error {
+func (UnimplementedTunnelClientServer) Connect(grpc.BidiStreamingServer[ClientMessage, ClientMessage]) error {
 	return status.Errorf(codes.Unimplemented, "method Connect not implemented")
 }
-func (UnimplementedTunnelAgentServer) mustEmbedUnimplementedTunnelAgentServer() {}
-func (UnimplementedTunnelAgentServer) testEmbeddedByValue()                     {}
+func (UnimplementedTunnelClientServer) mustEmbedUnimplementedTunnelClientServer() {}
+func (UnimplementedTunnelClientServer) testEmbeddedByValue()                      {}
 
-// UnsafeTunnelAgentServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to TunnelAgentServer will
+// UnsafeTunnelClientServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to TunnelClientServer will
 // result in compilation errors.
-type UnsafeTunnelAgentServer interface {
-	mustEmbedUnimplementedTunnelAgentServer()
+type UnsafeTunnelClientServer interface {
+	mustEmbedUnimplementedTunnelClientServer()
 }
 
-func RegisterTunnelAgentServer(s grpc.ServiceRegistrar, srv TunnelAgentServer) {
-	// If the following call pancis, it indicates UnimplementedTunnelAgentServer was
+func RegisterTunnelClientServer(s grpc.ServiceRegistrar, srv TunnelClientServer) {
+	// If the following call pancis, it indicates UnimplementedTunnelClientServer was
 	// embedded by pointer and is nil.  This will cause panics if an
 	// unimplemented method is ever invoked, so we test this at initialization
 	// time to prevent it from happening at runtime later due to I/O.
 	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
 		t.testEmbeddedByValue()
 	}
-	s.RegisterService(&TunnelAgent_ServiceDesc, srv)
+	s.RegisterService(&TunnelClient_ServiceDesc, srv)
 }
 
-func _TunnelAgent_Connect_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(TunnelAgentServer).Connect(&grpc.GenericServerStream[AgentMessage, AgentMessage]{ServerStream: stream})
+func _TunnelClient_Connect_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(TunnelClientServer).Connect(&grpc.GenericServerStream[ClientMessage, ClientMessage]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type TunnelAgent_ConnectServer = grpc.BidiStreamingServer[AgentMessage, AgentMessage]
+type TunnelClient_ConnectServer = grpc.BidiStreamingServer[ClientMessage, ClientMessage]
 
-// TunnelAgent_ServiceDesc is the grpc.ServiceDesc for TunnelAgent service.
+// TunnelClient_ServiceDesc is the grpc.ServiceDesc for TunnelClient service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var TunnelAgent_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "proto.TunnelAgent",
-	HandlerType: (*TunnelAgentServer)(nil),
+var TunnelClient_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "proto.TunnelClient",
+	HandlerType: (*TunnelClientServer)(nil),
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "Connect",
-			Handler:       _TunnelAgent_Connect_Handler,
+			Handler:       _TunnelClient_Connect_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},
@@ -115,94 +115,94 @@ var TunnelAgent_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	TunnelImplant_Connect_FullMethodName = "/proto.TunnelImplant/Connect"
+	TunnelProxy_Connect_FullMethodName = "/proto.TunnelProxy/Connect"
 )
 
-// TunnelImplantClient is the client API for TunnelImplant service.
+// TunnelProxyClient is the client API for TunnelProxy service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type TunnelImplantClient interface {
-	Connect(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[ImplantMessage, ImplantMessage], error)
+type TunnelProxyClient interface {
+	Connect(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[ProxyMessage, ProxyMessage], error)
 }
 
-type tunnelImplantClient struct {
+type tunnelProxyClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewTunnelImplantClient(cc grpc.ClientConnInterface) TunnelImplantClient {
-	return &tunnelImplantClient{cc}
+func NewTunnelProxyClient(cc grpc.ClientConnInterface) TunnelProxyClient {
+	return &tunnelProxyClient{cc}
 }
 
-func (c *tunnelImplantClient) Connect(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[ImplantMessage, ImplantMessage], error) {
+func (c *tunnelProxyClient) Connect(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[ProxyMessage, ProxyMessage], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &TunnelImplant_ServiceDesc.Streams[0], TunnelImplant_Connect_FullMethodName, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &TunnelProxy_ServiceDesc.Streams[0], TunnelProxy_Connect_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[ImplantMessage, ImplantMessage]{ClientStream: stream}
+	x := &grpc.GenericClientStream[ProxyMessage, ProxyMessage]{ClientStream: stream}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type TunnelImplant_ConnectClient = grpc.BidiStreamingClient[ImplantMessage, ImplantMessage]
+type TunnelProxy_ConnectClient = grpc.BidiStreamingClient[ProxyMessage, ProxyMessage]
 
-// TunnelImplantServer is the server API for TunnelImplant service.
-// All implementations must embed UnimplementedTunnelImplantServer
+// TunnelProxyServer is the server API for TunnelProxy service.
+// All implementations must embed UnimplementedTunnelProxyServer
 // for forward compatibility.
-type TunnelImplantServer interface {
-	Connect(grpc.BidiStreamingServer[ImplantMessage, ImplantMessage]) error
-	mustEmbedUnimplementedTunnelImplantServer()
+type TunnelProxyServer interface {
+	Connect(grpc.BidiStreamingServer[ProxyMessage, ProxyMessage]) error
+	mustEmbedUnimplementedTunnelProxyServer()
 }
 
-// UnimplementedTunnelImplantServer must be embedded to have
+// UnimplementedTunnelProxyServer must be embedded to have
 // forward compatible implementations.
 //
 // NOTE: this should be embedded by value instead of pointer to avoid a nil
 // pointer dereference when methods are called.
-type UnimplementedTunnelImplantServer struct{}
+type UnimplementedTunnelProxyServer struct{}
 
-func (UnimplementedTunnelImplantServer) Connect(grpc.BidiStreamingServer[ImplantMessage, ImplantMessage]) error {
+func (UnimplementedTunnelProxyServer) Connect(grpc.BidiStreamingServer[ProxyMessage, ProxyMessage]) error {
 	return status.Errorf(codes.Unimplemented, "method Connect not implemented")
 }
-func (UnimplementedTunnelImplantServer) mustEmbedUnimplementedTunnelImplantServer() {}
-func (UnimplementedTunnelImplantServer) testEmbeddedByValue()                       {}
+func (UnimplementedTunnelProxyServer) mustEmbedUnimplementedTunnelProxyServer() {}
+func (UnimplementedTunnelProxyServer) testEmbeddedByValue()                     {}
 
-// UnsafeTunnelImplantServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to TunnelImplantServer will
+// UnsafeTunnelProxyServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to TunnelProxyServer will
 // result in compilation errors.
-type UnsafeTunnelImplantServer interface {
-	mustEmbedUnimplementedTunnelImplantServer()
+type UnsafeTunnelProxyServer interface {
+	mustEmbedUnimplementedTunnelProxyServer()
 }
 
-func RegisterTunnelImplantServer(s grpc.ServiceRegistrar, srv TunnelImplantServer) {
-	// If the following call pancis, it indicates UnimplementedTunnelImplantServer was
+func RegisterTunnelProxyServer(s grpc.ServiceRegistrar, srv TunnelProxyServer) {
+	// If the following call pancis, it indicates UnimplementedTunnelProxyServer was
 	// embedded by pointer and is nil.  This will cause panics if an
 	// unimplemented method is ever invoked, so we test this at initialization
 	// time to prevent it from happening at runtime later due to I/O.
 	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
 		t.testEmbeddedByValue()
 	}
-	s.RegisterService(&TunnelImplant_ServiceDesc, srv)
+	s.RegisterService(&TunnelProxy_ServiceDesc, srv)
 }
 
-func _TunnelImplant_Connect_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(TunnelImplantServer).Connect(&grpc.GenericServerStream[ImplantMessage, ImplantMessage]{ServerStream: stream})
+func _TunnelProxy_Connect_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(TunnelProxyServer).Connect(&grpc.GenericServerStream[ProxyMessage, ProxyMessage]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type TunnelImplant_ConnectServer = grpc.BidiStreamingServer[ImplantMessage, ImplantMessage]
+type TunnelProxy_ConnectServer = grpc.BidiStreamingServer[ProxyMessage, ProxyMessage]
 
-// TunnelImplant_ServiceDesc is the grpc.ServiceDesc for TunnelImplant service.
+// TunnelProxy_ServiceDesc is the grpc.ServiceDesc for TunnelProxy service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var TunnelImplant_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "proto.TunnelImplant",
-	HandlerType: (*TunnelImplantServer)(nil),
+var TunnelProxy_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "proto.TunnelProxy",
+	HandlerType: (*TunnelProxyServer)(nil),
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "Connect",
-			Handler:       _TunnelImplant_Connect_Handler,
+			Handler:       _TunnelProxy_Connect_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},

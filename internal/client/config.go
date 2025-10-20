@@ -1,4 +1,4 @@
-package agent
+package client
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 )
 
 type Config struct {
-	AgentID    string           `mapstructure:"agent_id" json:"agent_id" yaml:"agent_id"`
+	ClientID    string           `mapstructure:"client_id" json:"client_id" yaml:"client_id"`
 	ServerAddr string           `mapstructure:"server_addr" json:"server_addr" yaml:"server_addr"`
 	ListenPort int              `mapstructure:"listen_port" json:"listen_port" yaml:"listen_port"`
 	TargetCIDR string           `mapstructure:"target_cidr" json:"target_cidr" yaml:"target_cidr"`
@@ -17,18 +17,18 @@ type Config struct {
 
 func DefaultConfig() *Config {
 	return &Config{
-		AgentID:    "",
+		ClientID:    "",
 		ServerAddr: "localhost:8080",
 		ListenPort: 9999,
 		TargetCIDR: "100.64.0.0/10",
-		TLS:        config.DefaultTLSConfig("agent"),
+		TLS:        config.DefaultTLSConfig("client"),
 		Log:        config.DefaultLogConfig(),
 	}
 }
 
 func LoadConfig(configFile string) (*Config, error) {
 	cfg := DefaultConfig()
-	if err := config.Load("agent", configFile, cfg); err != nil {
+	if err := config.Load("client", configFile, cfg); err != nil {
 		return nil, err
 	}
 	return cfg, nil
@@ -36,7 +36,7 @@ func LoadConfig(configFile string) (*Config, error) {
 
 func LoadConfigMultiple(configFiles ...string) (*Config, error) {
 	cfg := DefaultConfig()
-	if err := config.LoadMultiple("agent", configFiles, cfg); err != nil {
+	if err := config.LoadMultiple("client", configFiles, cfg); err != nil {
 		return nil, err
 	}
 	return cfg, nil

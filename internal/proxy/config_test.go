@@ -1,4 +1,4 @@
-package implant
+package proxy
 
 import (
 	"testing"
@@ -10,8 +10,8 @@ func TestDefaultConfig(t *testing.T) {
 	if cfg.ServerAddr != "localhost:8081" {
 		t.Errorf("expected ServerAddr localhost:8081, got %s", cfg.ServerAddr)
 	}
-	if cfg.ImplantID != "implant-1" {
-		t.Errorf("expected ImplantID implant-1, got %s", cfg.ImplantID)
+	if cfg.ProxyID != "proxy-1" {
+		t.Errorf("expected ProxyID proxy-1, got %s", cfg.ProxyID)
 	}
 	if cfg.ManagedCIDR != "192.168.1.0/24" {
 		t.Errorf("expected ManagedCIDR 192.168.1.0/24, got %s", cfg.ManagedCIDR)
@@ -33,16 +33,16 @@ func TestConfigValidation(t *testing.T) {
 			name: "missing server addr",
 			cfg: &Config{
 				ServerAddr:  "",
-				ImplantID:   "implant-1",
+				ProxyID:   "proxy-1",
 				ManagedCIDR: "192.168.1.0/24",
 			},
 			expectErr: true,
 		},
 		{
-			name: "missing implant ID",
+			name: "missing proxy ID",
 			cfg: &Config{
 				ServerAddr:  "localhost:8081",
-				ImplantID:   "",
+				ProxyID:   "",
 				ManagedCIDR: "192.168.1.0/24",
 			},
 			expectErr: true,
@@ -51,7 +51,7 @@ func TestConfigValidation(t *testing.T) {
 			name: "missing managed CIDR",
 			cfg: &Config{
 				ServerAddr:  "localhost:8081",
-				ImplantID:   "implant-1",
+				ProxyID:   "proxy-1",
 				ManagedCIDR: "",
 			},
 			expectErr: true,

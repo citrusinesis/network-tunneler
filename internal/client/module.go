@@ -1,4 +1,4 @@
-package agent
+package client
 
 import (
 	"crypto/tls"
@@ -10,7 +10,7 @@ import (
 	"network-tunneler/pkg/logger"
 )
 
-var Module = fx.Module("agent",
+var Module = fx.Module("client",
 	fx.Provide(
 		ProvideConfig,
 

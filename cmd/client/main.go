@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/fx"
 
-	"network-tunneler/internal/implant"
+	"network-tunneler/internal/client"
 	"network-tunneler/internal/version"
 	"network-tunneler/pkg/logger"
 )
@@ -17,20 +17,22 @@ import (
 var (
 	configFile string
 	serverAddr string
-	implantID  string
+	targetCIDR string
+	listenPort int
 )
 
 func main() {
 	rootCmd := &cobra.Command{
-		Use:     "implant",
-		Short:   "Network tunneler implant - forwards traffic to internal network",
+		Use:     "client",
+		Short:   "Network tunneler client - intercepts and forwards traffic to server",
 		Version: version.Short(),
 		Run:     run,
 	}
 
 	rootCmd.Flags().StringVarP(&configFile, "config", "c", "", "Config file (yaml/json/.env)")
 	rootCmd.Flags().StringVar(&serverAddr, "server", "", "Server address (overrides config)")
-	rootCmd.Flags().StringVar(&implantID, "id", "", "Implant ID (overrides config)")
+	rootCmd.Flags().StringVar(&targetCIDR, "cidr", "", "Target CIDR to intercept (overrides config)")
+	rootCmd.Flags().IntVar(&listenPort, "port", 0, "Local listen port (overrides config)")
 
 	versionCmd := &cobra.Command{
 		Use:   "version",
@@ -62,19 +64,19 @@ func run(cmd *cobra.Command, args []string) {
 		fx.Decorate(applyOverrides),
 
 		logger.Module,
-		implant.Module,
+		client.Module,
 
 		fx.WithLogger(logger.NewFxLogger),
 
 		fx.Populate(&log),
-		fx.Invoke(func(*implant.Implant) {}),
+		fx.Invoke(func(*client.Client) {}),
 	)
 
 	if err := app.Start(cmd.Context()); err != nil {
 		if log != nil {
-			log.Error("failed to start implant", logger.Error(err))
+			log.Error("failed to start client", logger.Error(err))
 		} else {
-			fmt.Fprintf(os.Stderr, "Failed to start implant: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Failed to start client: %v\n", err)
 		}
 		os.Exit(1)
 	}
@@ -89,15 +91,18 @@ func run(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	log.Info("implant shutdown complete")
+	log.Info("client shutdown complete")
 }
 
-func applyOverrides(cfg *implant.Config) *implant.Config {
+func applyOverrides(cfg *client.Config) *client.Config {
 	if serverAddr != "" {
 		cfg.ServerAddr = serverAddr
 	}
-	if implantID != "" {
-		cfg.ImplantID = implantID
+	if targetCIDR != "" {
+		cfg.TargetCIDR = targetCIDR
+	}
+	if listenPort != 0 {
+		cfg.ListenPort = listenPort
 	}
 	return cfg
 }

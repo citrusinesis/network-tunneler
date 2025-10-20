@@ -76,45 +76,45 @@ func run(cmd *cobra.Command, args []string) {
 	fmt.Printf("  Server certificate: %s\n", serverCertPath)
 	fmt.Printf("  Server private key: %s\n", serverKeyPath)
 
-	fmt.Println("\nGenerating agent certificate...")
-	agentCert, agentKey, err := crypto.GenerateCert(ca, crypto.CertOptions{
-		CommonName: "agent",
-		DNSNames:   []string{"agent"},
+	fmt.Println("\nGenerating client certificate...")
+	clientCert, clientKey, err := crypto.GenerateCert(ca, crypto.CertOptions{
+		CommonName: "client",
+		DNSNames:   []string{"client"},
 		Type:       crypto.ClientCert,
 	})
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to generate agent certificate: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Failed to generate client certificate: %v\n", err)
 		os.Exit(1)
 	}
 
-	agentCertPath := filepath.Join(outputDir, "agent.crt")
-	agentKeyPath := filepath.Join(outputDir, "agent.key")
-	if err := crypto.SaveCert(agentCert, agentKey, agentCertPath, agentKeyPath); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to save agent certificate: %v\n", err)
+	clientCertPath := filepath.Join(outputDir, "client.crt")
+	clientKeyPath := filepath.Join(outputDir, "client.key")
+	if err := crypto.SaveCert(clientCert, clientKey, clientCertPath, clientKeyPath); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to save client certificate: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("  Agent certificate: %s\n", agentCertPath)
-	fmt.Printf("  Agent private key: %s\n", agentKeyPath)
+	fmt.Printf("  Client certificate: %s\n", clientCertPath)
+	fmt.Printf("  Client private key: %s\n", clientKeyPath)
 
-	fmt.Println("\nGenerating implant certificate...")
-	implantCert, implantKey, err := crypto.GenerateCert(ca, crypto.CertOptions{
-		CommonName: "implant",
-		DNSNames:   []string{"implant"},
+	fmt.Println("\nGenerating proxy certificate...")
+	proxyCert, proxyKey, err := crypto.GenerateCert(ca, crypto.CertOptions{
+		CommonName: "proxy",
+		DNSNames:   []string{"proxy"},
 		Type:       crypto.ClientCert,
 	})
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to generate implant certificate: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Failed to generate proxy certificate: %v\n", err)
 		os.Exit(1)
 	}
 
-	implantCertPath := filepath.Join(outputDir, "implant.crt")
-	implantKeyPath := filepath.Join(outputDir, "implant.key")
-	if err := crypto.SaveCert(implantCert, implantKey, implantCertPath, implantKeyPath); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to save implant certificate: %v\n", err)
+	proxyCertPath := filepath.Join(outputDir, "proxy.crt")
+	proxyKeyPath := filepath.Join(outputDir, "proxy.key")
+	if err := crypto.SaveCert(proxyCert, proxyKey, proxyCertPath, proxyKeyPath); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to save proxy certificate: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("  Implant certificate: %s\n", implantCertPath)
-	fmt.Printf("  Implant private key: %s\n", implantKeyPath)
+	fmt.Printf("  Proxy certificate: %s\n", proxyCertPath)
+	fmt.Printf("  Proxy private key: %s\n", proxyKeyPath)
 
 	fmt.Println("\nCertificates generated successfully!")
 	fmt.Printf("\nAll certificates saved to: %s\n", outputDir)
@@ -153,19 +153,19 @@ var ServerCert string
 //go:embed server.key
 var ServerKey string
 
-// Agent Certificate
-//go:embed agent.crt
-var AgentCert string
+// Client Certificate
+//go:embed client.crt
+var ClientCert string
 
-//go:embed agent.key
-var AgentKey string
+//go:embed client.key
+var ClientKey string
 
-// Implant Certificate
-//go:embed implant.crt
-var ImplantCert string
+// Proxy Certificate
+//go:embed proxy.crt
+var ProxyCert string
 
-//go:embed implant.key
-var ImplantKey string
+//go:embed proxy.key
+var ProxyKey string
 `
 
 	embedPath := filepath.Join(dir, "embed.go")

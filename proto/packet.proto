@@ -13,14 +13,14 @@ enum Protocol {
 
 enum Direction {
   DIRECTION_UNSPECIFIED = 0;
-  DIRECTION_FORWARD = 1;   // Agent -> Server -> Target
-  DIRECTION_REVERSE = 2;   // Target -> Server -> Agent
+  DIRECTION_FORWARD = 1;   // Client -> Server -> Target
+  DIRECTION_REVERSE = 2;   // Target -> Server -> Client
 }
 
 enum MessageType {
   MESSAGE_TYPE_UNSPECIFIED = 0;
-  AGENT_REGISTER = 1;
-  IMPLANT_REGISTER = 2;
+  CLIENT_REGISTER = 1;
+  PROXY_REGISTER = 2;
   REGISTER_ACK = 3;
   PACKET = 4;
   HEARTBEAT = 5;
@@ -44,12 +44,12 @@ message Packet {
   int64 timestamp = 6;
 }
 
-message AgentRegister {
-  string agent_id = 1;
+message ClientRegister {
+  string client_id = 1;
 }
 
-message ImplantRegister {
-  string implant_id = 1;
+message ProxyRegister {
+  string proxy_id = 1;
   string managed_cidr = 2;
 }
 
@@ -68,26 +68,26 @@ message Envelope {
   bytes payload = 2;
 }
 
-service TunnelAgent {
-  rpc Connect(stream AgentMessage) returns (stream AgentMessage);
+service TunnelClient {
+  rpc Connect(stream ClientMessage) returns (stream ClientMessage);
 }
 
-service TunnelImplant {
-  rpc Connect(stream ImplantMessage) returns (stream ImplantMessage);
+service TunnelProxy {
+  rpc Connect(stream ProxyMessage) returns (stream ProxyMessage);
 }
 
-message AgentMessage {
+message ClientMessage {
   oneof message {
-    AgentRegister register = 1;
+    ClientRegister register = 1;
     Packet packet = 2;
     Heartbeat heartbeat = 3;
     RegisterAck ack = 4;
   }
 }
 
-message ImplantMessage {
+message ProxyMessage {
   oneof message {
-    ImplantRegister register = 1;
+    ProxyRegister register = 1;
     Packet packet = 2;
     Heartbeat heartbeat = 3;
     RegisterAck ack = 4;

@@ -1,4 +1,4 @@
-package implant
+package proxy
 
 import (
 	"testing"

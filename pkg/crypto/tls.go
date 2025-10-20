@@ -19,7 +19,7 @@ func LoadTLSConfig(cfg *config.TLSConfig) (*tls.Config, error) {
 			return nil, fmt.Errorf("failed to load certificate: %w", err)
 		}
 	} else {
-		cert, err = tls.X509KeyPair([]byte(certs.AgentCert), []byte(certs.AgentKey))
+		cert, err = tls.X509KeyPair([]byte(certs.ClientCert), []byte(certs.ClientKey))
 		if err != nil {
 			return nil, fmt.Errorf("failed to load embedded certificate: %w", err)
 		}

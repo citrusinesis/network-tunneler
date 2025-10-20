@@ -1,4 +1,4 @@
-package agent
+package client
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"network-tunneler/pkg/logger"
 )
 
-type Agent struct {
+type Client struct {
 	config     *Config
 	logger     logger.Logger
 	netfilter  *NetfilterManager
@@ -35,11 +35,11 @@ type Params struct {
 	ServerConn *ServerConnection
 }
 
-func New(p Params) (*Agent, error) {
+func New(p Params) (*Client, error) {
 	ctx, cancel := context.WithCancel(context.Background())
-	agent := &Agent{
+	client := &Client{
 		config:     p.Config,
-		logger:     p.Logger.With(logger.String("component", "agent")),
+		logger:     p.Logger.With(logger.String("component", "client")),
 		netfilter:  p.Netfilter,
 		tracker:    p.Tracker,
 		serverConn: p.ServerConn,
@@ -48,15 +48,15 @@ func New(p Params) (*Agent, error) {
 	}
 
 	p.Lifecycle.Append(fx.Hook{
-		OnStart: agent.start,
-		OnStop:  agent.stop,
+		OnStart: client.start,
+		OnStop:  client.stop,
 	})
 
-	return agent, nil
+	return client, nil
 }
 
-func (a *Agent) start(ctx context.Context) error {
-	a.logger.Info("starting agent",
+func (a *Client) start(ctx context.Context) error {
+	a.logger.Info("starting client",
 		logger.String("server_addr", a.config.ServerAddr),
 		logger.Int("listen_port", a.config.ListenPort),
 		logger.String("target_cidr", a.config.TargetCIDR),
@@ -89,8 +89,8 @@ func (a *Agent) start(ctx context.Context) error {
 	return nil
 }
 
-func (a *Agent) stop(ctx context.Context) error {
-	a.logger.Info("stopping agent")
+func (a *Client) stop(ctx context.Context) error {
+	a.logger.Info("stopping client")
 
 	a.cancel()
 
@@ -108,12 +108,12 @@ func (a *Agent) stop(ctx context.Context) error {
 		a.logger.Error("failed to cleanup netfilter", logger.Error(err))
 	}
 
-	a.logger.Info("agent stopped")
+	a.logger.Info("client stopped")
 
 	return nil
 }
 
-func (a *Agent) acceptLoop() {
+func (a *Client) acceptLoop() {
 	defer a.wg.Done()
 	defer a.logger.Info("accept loop stopped")
 
@@ -151,7 +151,7 @@ func (a *Agent) acceptLoop() {
 	}
 }
 
-func (a *Agent) cleanupLoop() {
+func (a *Client) cleanupLoop() {
 	defer a.wg.Done()
 	defer a.logger.Info("cleanup loop stopped")
 

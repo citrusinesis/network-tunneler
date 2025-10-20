@@ -46,8 +46,8 @@ func New(lc fx.Lifecycle, p Params) *Server {
 
 func (s *Server) start(ctx context.Context) error {
 	s.logger.Info("starting server",
-		logger.String("agent_addr", s.cfg.AgentListenAddr),
-		logger.String("implant_addr", s.cfg.ImplantListenAddr),
+		logger.String("client_addr", s.cfg.ClientListenAddr),
+		logger.String("proxy_addr", s.cfg.ProxyListenAddr),
 	)
 
 	if err := s.grpcServer.Start(ctx); err != nil {
