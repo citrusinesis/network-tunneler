@@ -5,22 +5,41 @@ import (
 	"crypto/x509"
 	"fmt"
 
+	"network-tunneler/internal/certs"
 	"network-tunneler/internal/config"
 )
 
 func LoadTLSConfig(cfg *config.TLSConfig) (*tls.Config, error) {
-	cert, err := tls.LoadX509KeyPair(cfg.CertPath, cfg.KeyPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load certificate: %w", err)
+	var cert tls.Certificate
+	var err error
+
+	if cfg.CertPath != "" && cfg.KeyPath != "" {
+		cert, err = tls.LoadX509KeyPair(cfg.CertPath, cfg.KeyPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load certificate: %w", err)
+		}
+	} else {
+		cert, err = tls.X509KeyPair([]byte(certs.AgentCert), []byte(certs.AgentKey))
+		if err != nil {
+			return nil, fmt.Errorf("failed to load embedded certificate: %w", err)
+		}
 	}
 
-	caCert, err := LoadCA(cfg.CAPath, "")
-	if err != nil {
-		return nil, fmt.Errorf("failed to load CA: %w", err)
+	var caCertPEM []byte
+	if cfg.CAPath != "" {
+		caCert, err := LoadCA(cfg.CAPath, "")
+		if err != nil {
+			return nil, fmt.Errorf("failed to load CA: %w", err)
+		}
+		caCertPEM = caCert.Cert.Raw
+	} else {
+		caCertPEM = []byte(certs.CACert)
 	}
 
 	caPool := x509.NewCertPool()
-	caPool.AddCert(caCert.Cert)
+	if !caPool.AppendCertsFromPEM(caCertPEM) {
+		return nil, fmt.Errorf("failed to parse CA certificate")
+	}
 
 	tlsConfig := &tls.Config{
 		Certificates:       []tls.Certificate{cert},
