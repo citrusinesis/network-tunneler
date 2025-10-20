@@ -27,15 +27,19 @@ func NewMockConnPair() (client, server net.Conn) {
 }
 
 type MockNetConn struct {
-	ReadBuf  *bytes.Buffer
-	WriteBuf *bytes.Buffer
-	Closed   bool
+	ReadBuf       *bytes.Buffer
+	WriteBuf      *bytes.Buffer
+	Closed        bool
+	LocalAddress  net.Addr
+	RemoteAddress net.Addr
 }
 
 func NewMockNetConn() *MockNetConn {
 	return &MockNetConn{
-		ReadBuf:  &bytes.Buffer{},
-		WriteBuf: &bytes.Buffer{},
+		ReadBuf:       &bytes.Buffer{},
+		WriteBuf:      &bytes.Buffer{},
+		LocalAddress:  &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 8080},
+		RemoteAddress: &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 12345},
 	}
 }
 
@@ -53,11 +57,11 @@ func (m *MockNetConn) Close() error {
 }
 
 func (m *MockNetConn) LocalAddr() net.Addr {
-	return &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 8080}
+	return m.LocalAddress
 }
 
 func (m *MockNetConn) RemoteAddr() net.Addr {
-	return &net.TCPAddr{IP: net.ParseIP("127.0.0.1"), Port: 12345}
+	return m.RemoteAddress
 }
 
 func (m *MockNetConn) SetDeadline(t time.Time) error      { return nil }
