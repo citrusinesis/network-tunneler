@@ -50,8 +50,8 @@ func (pf *PacketForwarder) Forward(pkt *pb.Packet) error {
 	pf.mu.Lock()
 	state, exists := pf.connections[pkt.ConnectionId]
 	if !exists {
-		targetAddr := fmt.Sprintf("%s:%d", pkt.ConnTuple.DstIp, pkt.ConnTuple.DstPort)
-		
+		targetAddr := net.JoinHostPort(pkt.ConnTuple.DstIp, fmt.Sprintf("%d", pkt.ConnTuple.DstPort))
+
 		conn, err := net.DialTimeout("tcp", targetAddr, 5*time.Second)
 		if err != nil {
 			pf.mu.Unlock()
