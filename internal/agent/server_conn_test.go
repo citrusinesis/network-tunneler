@@ -3,6 +3,7 @@ package agent
 import (
 	"context"
 	"net"
+	"strings"
 	"testing"
 	"time"
 
@@ -71,9 +72,14 @@ func setupMockServer(t *testing.T) (*grpc.Server, string, *mockAgentServer) {
 }
 
 func newTestServerConnection(addr string, tracker *ConnectionTracker, log logger.Logger) *ServerConnection {
+	cfg := &Config{
+		AgentID:    "",
+		ServerAddr: addr,
+	}
 	return &ServerConnection{
 		serverAddr:   addr,
 		tracker:      tracker,
+		config:       cfg,
 		packetChan:   make(chan *pb.Packet, 100),
 		logger:       log.With(logger.String("component", "server_conn")),
 		stopChan:     make(chan struct{}),
@@ -101,8 +107,11 @@ func TestServerConnection_Connect(t *testing.T) {
 
 	select {
 	case reg := <-mock.registerChan:
-		if reg.AgentId != "agent-1" {
-			t.Errorf("expected agent_id 'agent-1', got %s", reg.AgentId)
+		if !strings.HasPrefix(reg.AgentId, "agent-") {
+			t.Errorf("expected agent_id to have prefix 'agent-', got %s", reg.AgentId)
+		}
+		if len(reg.AgentId) != 22 {
+			t.Errorf("expected agent_id length 22, got %d", len(reg.AgentId))
 		}
 	case <-time.After(2 * time.Second):
 		t.Fatal("timeout waiting for registration")

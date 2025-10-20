@@ -5,12 +5,15 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
+	"sync"
 	"time"
 
 	"go.uber.org/fx"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 
+	"network-tunneler/internal/network"
 	"network-tunneler/pkg/logger"
 	pb "network-tunneler/proto"
 )
@@ -21,6 +24,8 @@ type ServerConnection struct {
 	tracker      *ConnectionTracker
 	logger       logger.Logger
 	grpcInsecure bool
+	config       *Config
+	agentID      string
 
 	grpcConn   *grpc.ClientConn
 	grpcClient pb.TunnelAgentClient
@@ -28,6 +33,8 @@ type ServerConnection struct {
 
 	packetChan chan *pb.Packet
 	stopChan   chan struct{}
+	stopOnce   sync.Once
+	wg         sync.WaitGroup
 }
 
 type ServerConnParams struct {
@@ -44,6 +51,7 @@ func NewServerConnection(p ServerConnParams) *ServerConnection {
 		serverAddr: p.Config.ServerAddr,
 		tlsConfig:  p.TLSConfig,
 		tracker:    p.Tracker,
+		config:     p.Config,
 		packetChan: make(chan *pb.Packet, 100),
 		logger:     p.Logger.With(logger.String("component", "server_conn")),
 		stopChan:   make(chan struct{}),
@@ -56,12 +64,13 @@ func (sc *ServerConnection) Connect(ctx context.Context) error {
 	)
 
 	var opts []grpc.DialOption
+	var creds credentials.TransportCredentials
 	if sc.grpcInsecure {
-		opts = append(opts, grpc.WithInsecure())
+		creds = insecure.NewCredentials()
 	} else {
-		creds := credentials.NewTLS(sc.tlsConfig)
-		opts = append(opts, grpc.WithTransportCredentials(creds))
+		creds = credentials.NewTLS(sc.tlsConfig)
 	}
+	opts = append(opts, grpc.WithTransportCredentials(creds))
 
 	conn, err := grpc.NewClient(sc.serverAddr, opts...)
 	if err != nil {
@@ -80,24 +89,35 @@ func (sc *ServerConnection) Connect(ctx context.Context) error {
 	sc.stream = stream
 	sc.logger.Info("gRPC stream established")
 
-	if err := sc.register(ctx); err != nil {
+	if err := sc.register(); err != nil {
 		sc.Close()
 		return fmt.Errorf("failed to register with server: %w", err)
 	}
 
+	sc.wg.Add(2)
 	go sc.readLoop()
 	go sc.writeLoop()
 
 	return nil
 }
 
-func (sc *ServerConnection) register(ctx context.Context) error {
-	agentID := "agent-1"
+func (sc *ServerConnection) register() error {
+	agentID := sc.config.AgentID
+	if agentID == "" {
+		var err error
+		agentID, err = network.GenerateAgentID()
+		if err != nil {
+			return fmt.Errorf("failed to generate agent ID: %w", err)
+		}
+		sc.agentID = agentID
+	} else {
+		sc.agentID = agentID
+	}
 
 	reg := &pb.AgentMessage{
 		Message: &pb.AgentMessage_Register{
 			Register: &pb.AgentRegister{
-				AgentId: agentID,
+				AgentId: sc.agentID,
 			},
 		},
 	}
@@ -106,7 +126,7 @@ func (sc *ServerConnection) register(ctx context.Context) error {
 		return fmt.Errorf("failed to send registration: %w", err)
 	}
 
-	sc.logger.Info("registration sent", logger.String("agent_id", agentID))
+	sc.logger.Info("registration sent", logger.String("agent_id", sc.agentID))
 
 	msg, err := sc.stream.Recv()
 	if err != nil {
@@ -128,6 +148,7 @@ func (sc *ServerConnection) register(ctx context.Context) error {
 }
 
 func (sc *ServerConnection) readLoop() {
+	defer sc.wg.Done()
 	defer sc.logger.Info("read loop stopped")
 
 	for {
@@ -161,6 +182,7 @@ func (sc *ServerConnection) readLoop() {
 }
 
 func (sc *ServerConnection) writeLoop() {
+	defer sc.wg.Done()
 	defer sc.logger.Info("write loop stopped")
 
 	heartbeatTicker := time.NewTicker(30 * time.Second)
@@ -188,7 +210,7 @@ func (sc *ServerConnection) writeLoop() {
 			msg := &pb.AgentMessage{
 				Message: &pb.AgentMessage_Heartbeat{
 					Heartbeat: &pb.Heartbeat{
-						SenderId:  "agent-1",
+						SenderId:  sc.agentID,
 						Timestamp: time.Now().Unix(),
 					},
 				},
@@ -220,10 +242,14 @@ func (sc *ServerConnection) SendPacket(pkt *pb.Packet) {
 }
 
 func (sc *ServerConnection) Close() error {
-	close(sc.stopChan)
+	sc.stopOnce.Do(func() { close(sc.stopChan) })
+
 	if sc.stream != nil {
 		sc.stream.CloseSend()
 	}
+
+	sc.wg.Wait()
+
 	if sc.grpcConn != nil {
 		return sc.grpcConn.Close()
 	}

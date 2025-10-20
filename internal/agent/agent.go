@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"sync"
 	"time"
 
 	"go.uber.org/fx"
@@ -18,6 +19,9 @@ type Agent struct {
 	tracker    *ConnectionTracker
 	serverConn *ServerConnection
 	listener   net.Listener
+	ctx        context.Context
+	cancel     context.CancelFunc
+	wg         sync.WaitGroup
 }
 
 type Params struct {
@@ -32,12 +36,15 @@ type Params struct {
 }
 
 func New(p Params) (*Agent, error) {
+	ctx, cancel := context.WithCancel(context.Background())
 	agent := &Agent{
 		config:     p.Config,
 		logger:     p.Logger.With(logger.String("component", "agent")),
 		netfilter:  p.Netfilter,
 		tracker:    p.Tracker,
 		serverConn: p.ServerConn,
+		ctx:        ctx,
+		cancel:     cancel,
 	}
 
 	p.Lifecycle.Append(fx.Hook{
@@ -75,6 +82,7 @@ func (a *Agent) start(ctx context.Context) error {
 		logger.String("listen_addr", listenAddr),
 	)
 
+	a.wg.Add(2)
 	go a.acceptLoop()
 	go a.cleanupLoop()
 
@@ -84,16 +92,20 @@ func (a *Agent) start(ctx context.Context) error {
 func (a *Agent) stop(ctx context.Context) error {
 	a.logger.Info("stopping agent")
 
+	a.cancel()
+
 	if a.listener != nil {
 		a.listener.Close()
 	}
 
-	if err := a.netfilter.Cleanup(); err != nil {
-		a.logger.Error("failed to cleanup netfilter", logger.Error(err))
-	}
-
 	if err := a.serverConn.Close(); err != nil {
 		a.logger.Error("failed to close server connection", logger.Error(err))
+	}
+
+	a.wg.Wait()
+
+	if err := a.netfilter.Cleanup(); err != nil {
+		a.logger.Error("failed to cleanup netfilter", logger.Error(err))
 	}
 
 	a.logger.Info("agent stopped")
@@ -102,23 +114,33 @@ func (a *Agent) stop(ctx context.Context) error {
 }
 
 func (a *Agent) acceptLoop() {
+	defer a.wg.Done()
 	defer a.logger.Info("accept loop stopped")
 
 	handler := NewConnectionHandler(a.tracker, a.serverConn.GetPacketChannel(), a.logger)
 
 	for {
+		select {
+		case <-a.ctx.Done():
+			a.logger.Debug("accept loop cancelled")
+			return
+		default:
+		}
+
 		conn, err := a.listener.Accept()
 		if err != nil {
 			select {
-			case <-a.serverConn.stopChan:
-				a.logger.Debug("listener closed")
+			case <-a.ctx.Done():
+				a.logger.Debug("listener closed during shutdown")
 				return
 			default:
 			}
 
-			if opErr, ok := err.(*net.OpError); ok && opErr.Err.Error() == "use of closed network connection" {
-				a.logger.Debug("listener closed")
-				return
+			if opErr, ok := err.(*net.OpError); ok {
+				if opErr.Err.Error() == "use of closed network connection" {
+					a.logger.Debug("listener closed")
+					return
+				}
 			}
 
 			a.logger.Error("accept error", logger.Error(err))
@@ -130,18 +152,25 @@ func (a *Agent) acceptLoop() {
 }
 
 func (a *Agent) cleanupLoop() {
+	defer a.wg.Done()
 	defer a.logger.Info("cleanup loop stopped")
 
 	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
 
-	for range ticker.C {
-		removed := a.tracker.Cleanup(5 * time.Minute)
-		if removed > 0 {
-			a.logger.Info("cleanup cycle completed",
-				logger.Int("removed", removed),
-				logger.Int("active", a.tracker.Count()),
-			)
+	for {
+		select {
+		case <-a.ctx.Done():
+			a.logger.Debug("cleanup loop cancelled")
+			return
+		case <-ticker.C:
+			removed := a.tracker.Cleanup(5 * time.Minute)
+			if removed > 0 {
+				a.logger.Info("cleanup cycle completed",
+					logger.Int("removed", removed),
+					logger.Int("active", a.tracker.Count()),
+				)
+			}
 		}
 	}
 }

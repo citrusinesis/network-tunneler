@@ -43,7 +43,7 @@ func ProvideConfig(configFile string) (ProvidedConfig, error) {
 		}
 	}
 
-	tlsConfig, err := crypto.LoadClientTLSConfig(&cfg.TLS)
+	tlsConfig, err := crypto.LoadClientTLSConfig(cfg.GetTLS())
 	if err != nil {
 		return ProvidedConfig{}, fmt.Errorf("failed to load TLS config: %w", err)
 	}
