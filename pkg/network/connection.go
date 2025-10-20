@@ -66,9 +66,7 @@ func GenerateConnectionID(srcIP net.IP, srcPort uint16, dstIP net.IP, dstPort ui
 	}
 
 	ep1, ep2 := endpoint{ip: srcIP4, port: srcPort}, endpoint{ip: dstIP4, port: dstPort}
-	if cmp := compareIPs(ep1.ip, ep2.ip); cmp == 0 {
-		cmp = int(ep1.port) - int(ep2.port)
-	} else if cmp > 0 {
+	if cmp := compareIPs(ep1.ip, ep2.ip); cmp > 0 || (cmp == 0 && ep1.port > ep2.port) {
 		ep1, ep2 = ep2, ep1
 	}
 
