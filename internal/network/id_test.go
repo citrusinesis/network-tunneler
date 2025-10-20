@@ -77,7 +77,7 @@ func TestGenerateRandomConnectionID(t *testing.T) {
 
 func TestIDUniqueness(t *testing.T) {
 	seen := make(map[string]bool)
-	for _ = range 1000 {
+	for range 1000 {
 		id, err := GenerateAgentID()
 		if err != nil {
 			t.Fatalf("GenerateAgentID() error = %v", err)

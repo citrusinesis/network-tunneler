@@ -72,7 +72,7 @@ func (h *ConnectionHandler) Handle(conn net.Conn) {
 
 	buf := make([]byte, 65535)
 	for {
-		conn.SetReadDeadline(time.Now().Add(5 * time.Minute))
+		_ = conn.SetReadDeadline(time.Now().Add(5 * time.Minute))
 
 		n, err := conn.Read(buf)
 		if err != nil {

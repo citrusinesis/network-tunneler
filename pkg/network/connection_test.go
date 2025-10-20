@@ -196,7 +196,7 @@ func TestConnectionIDConsistency(t *testing.T) {
 	dstIP := net.ParseIP("10.2.2.2")
 
 	ids := make(map[string]bool)
-	for _ = range 100 {
+	for range 100 {
 		id := GenerateConnectionID(srcIP, 12345, dstIP, 80)
 		ids[id] = true
 	}
