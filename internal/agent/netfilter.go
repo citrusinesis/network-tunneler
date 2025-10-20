@@ -5,7 +5,6 @@ import (
 
 	"go.uber.org/fx"
 
-	"network-tunneler/internal/network"
 	"network-tunneler/pkg/logger"
 	"network-tunneler/pkg/netfilter"
 )
@@ -46,7 +45,15 @@ func (nf *NetfilterManager) Setup() error {
 		logger.String("local_port", nf.localPort),
 	)
 
-	rule := network.RedirectTCPToLocalPort(nf.targetCIDR, nf.localPort)
+	rule := netfilter.NewRule().
+		Table(netfilter.TableNat).
+		Chain(netfilter.ChainOutput).
+		Protocol(netfilter.ProtocolTCP).
+		Destination(nf.targetCIDR).
+		Target(netfilter.TargetRedirect).
+		ToPort(nf.localPort).
+		Comment("network-tunneler TCP redirect").
+		MustBuild()
 
 	if err := nf.manager.AddRule(rule); err != nil {
 		return fmt.Errorf("failed to add redirect rule: %w", err)
