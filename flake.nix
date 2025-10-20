@@ -82,13 +82,13 @@
           };
       in
       {
-        # 🧑‍💻 DevShell
         devShells.default = pkgs.mkShell {
           buildInputs =
             buildInputs
             ++ (
               with pkgs;
               [
+                golangci-lint
                 gopls
                 go-tools
                 gotools
@@ -112,7 +112,6 @@
             export GOPATH="$PWD/.go"
             export PATH="$GOPATH/bin:$PATH"
 
-            # Configure VSCode to use Nix flake Go tools
             mkdir -p .vscode
             cat > .vscode/settings.json <<EOF
             {
@@ -138,9 +137,7 @@
           '';
         };
 
-        # 🧩 Packages (binaries + docker images)
         packages = rec {
-          # Go binaries
           agent = buildGoBinary {
             name = "tunneler-agent";
             subPackage = "cmd/agent";
@@ -165,7 +162,6 @@
             ];
           };
 
-          # Docker images
           docker-agent = buildDockerImage {
             name = "tunneler-agent";
             binary = agent;
