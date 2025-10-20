@@ -32,6 +32,9 @@ type Registry struct {
 	connections map[string]*ConnectionRoute // connectionID -> route
 	mu          sync.RWMutex
 	logger      logger.Logger
+	ctx         context.Context
+	cancel      context.CancelFunc
+	wg          sync.WaitGroup
 }
 
 type ConnectionRoute struct {
@@ -47,24 +50,37 @@ type ConnectionRoute struct {
 }
 
 func NewRegistry(log logger.Logger) *Registry {
+	ctx, cancel := context.WithCancel(context.Background())
 	r := &Registry{
 		agents:      make(map[string]*AgentConn),
 		implants:    make(map[string]*ImplantConn),
 		connections: make(map[string]*ConnectionRoute),
 		logger:      log.With(logger.String("component", "registry")),
+		ctx:         ctx,
+		cancel:      cancel,
 	}
 
+	r.wg.Add(1)
 	go r.cleanupLoop()
 
 	return r
 }
 
 func (r *Registry) cleanupLoop() {
+	defer r.wg.Done()
+	defer r.logger.Info("cleanup loop stopped")
+
 	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
 
-	for range ticker.C {
-		r.cleanupStaleConnections()
+	for {
+		select {
+		case <-ticker.C:
+			r.cleanupStaleConnections()
+		case <-r.ctx.Done():
+			r.logger.Debug("context cancelled, stopping cleanup loop")
+			return
+		}
 	}
 }
 
@@ -246,18 +262,22 @@ func (r *Registry) ListImplants() []*ImplantConn {
 }
 
 func (r *Registry) Cleanup(ctx context.Context) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
 	r.logger.Info("cleaning up registry",
 		logger.Int("agents", len(r.agents)),
 		logger.Int("implants", len(r.implants)),
 		logger.Int("connections", len(r.connections)),
 	)
 
+	r.cancel()
+	r.wg.Wait()
+
+	r.mu.Lock()
 	r.agents = make(map[string]*AgentConn)
 	r.implants = make(map[string]*ImplantConn)
 	r.connections = make(map[string]*ConnectionRoute)
+	r.mu.Unlock()
+
+	r.logger.Info("registry cleaned up")
 
 	return nil
 }

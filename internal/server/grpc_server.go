@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net"
+	"sync"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -23,6 +24,8 @@ type GRPCServer struct {
 
 	agentServer   *grpc.Server
 	implantServer *grpc.Server
+
+	wg sync.WaitGroup
 }
 
 func NewGRPCServer(
@@ -66,16 +69,22 @@ func (s *GRPCServer) Start(ctx context.Context) error {
 		logger.String("implant_addr", s.cfg.ImplantListenAddr),
 	)
 
+	s.wg.Add(2)
+
 	go func() {
+		defer s.wg.Done()
 		if err := s.agentServer.Serve(agentLis); err != nil {
 			s.logger.Error("agent gRPC server error", logger.Error(err))
 		}
+		s.logger.Debug("agent gRPC server goroutine stopped")
 	}()
 
 	go func() {
+		defer s.wg.Done()
 		if err := s.implantServer.Serve(implantLis); err != nil {
 			s.logger.Error("implant gRPC server error", logger.Error(err))
 		}
+		s.logger.Debug("implant gRPC server goroutine stopped")
 	}()
 
 	s.logger.Info("gRPC servers started successfully")
@@ -85,13 +94,36 @@ func (s *GRPCServer) Start(ctx context.Context) error {
 func (s *GRPCServer) Stop(ctx context.Context) error {
 	s.logger.Info("stopping gRPC servers")
 
-	if s.agentServer != nil {
-		s.agentServer.GracefulStop()
-	}
-	if s.implantServer != nil {
-		s.implantServer.GracefulStop()
+	// Use a goroutine to perform graceful stop with context timeout protection
+	done := make(chan struct{})
+	go func() {
+		if s.agentServer != nil {
+			s.agentServer.GracefulStop()
+		}
+		if s.implantServer != nil {
+			s.implantServer.GracefulStop()
+		}
+		close(done)
+	}()
+
+	// Wait for graceful stop or context timeout
+	select {
+	case <-done:
+		s.logger.Info("gRPC servers stopped gracefully")
+	case <-ctx.Done():
+		s.logger.Warn("context timeout during graceful stop, forcing shutdown")
+		// Force stop if graceful stop times out
+		if s.agentServer != nil {
+			s.agentServer.Stop()
+		}
+		if s.implantServer != nil {
+			s.implantServer.Stop()
+		}
 	}
 
-	s.logger.Info("gRPC servers stopped")
+	// Wait for server goroutines to complete
+	s.wg.Wait()
+
+	s.logger.Info("all gRPC server goroutines stopped")
 	return nil
 }
