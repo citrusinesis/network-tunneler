@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 
+	"network-tunneler/internal/version"
 	"network-tunneler/pkg/logger"
 )
 
@@ -35,6 +36,9 @@ func (c *LogConfig) ToLoggerConfig() *logger.Config {
 }
 
 func DefaultLogConfig() LogConfig {
+	if version.IsDebug() {
+		return DevelopmentLogConfig()
+	}
 	return LogConfig{
 		Level:       logger.LevelInfo,
 		Format:      logger.FormatJSON,

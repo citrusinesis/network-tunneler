@@ -23,11 +23,11 @@ type ProvidedConfig struct {
 	fx.Out
 
 	Config       *Config
-	TlsConfig    *tls.Config
+	TLSConfig    *tls.Config
 	LoggerConfig *logger.Config
 }
 
-func ProvideConfig(configFile string, log logger.Logger) (ProvidedConfig, error) {
+func ProvideConfig(configFile string) (ProvidedConfig, error) {
 	var cfg *Config
 	var err error
 
@@ -40,14 +40,14 @@ func ProvideConfig(configFile string, log logger.Logger) (ProvidedConfig, error)
 		}
 	}
 
-	tlsConfig, err := LoadTLSConfig(cfg.GetTLS(), log)
+	tlsConfig, err := LoadTLSConfig(cfg.GetTLS())
 	if err != nil {
 		return ProvidedConfig{}, err
 	}
 
 	return ProvidedConfig{
 		Config:       cfg,
-		TlsConfig:    tlsConfig,
+		TLSConfig:    tlsConfig,
 		LoggerConfig: cfg.Log.ToLoggerConfig(),
 	}, nil
 }

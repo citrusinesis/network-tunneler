@@ -8,20 +8,15 @@ import (
 
 	"network-tunneler/internal/certs"
 	"network-tunneler/internal/config"
-	testutil "network-tunneler/internal/testing"
 )
 
 func TestLoadTLSConfig_Embedded(t *testing.T) {
-	cfg := &config.TLSConfig{
+	tlsConfig, err := LoadTLSConfig(&config.TLSConfig{
 		CertPath:           "",
 		KeyPath:            "",
 		CAPath:             "",
 		InsecureSkipVerify: false,
-	}
-
-	log := testutil.NewTestLogger()
-
-	tlsConfig, err := LoadTLSConfig(cfg, log)
+	})
 	if err != nil {
 		t.Fatalf("LoadTLSConfig failed: %v", err)
 	}
@@ -56,16 +51,12 @@ func TestLoadTLSConfig_FromFiles(t *testing.T) {
 		t.Fatalf("failed to write CA: %v", err)
 	}
 
-	cfg := &config.TLSConfig{
+	tlsConfig, err := LoadTLSConfig(&config.TLSConfig{
 		CertPath:           certPath,
 		KeyPath:            keyPath,
 		CAPath:             caPath,
 		InsecureSkipVerify: false,
-	}
-
-	log := testutil.NewTestLogger()
-
-	tlsConfig, err := LoadTLSConfig(cfg, log)
+	})
 	if err != nil {
 		t.Fatalf("LoadTLSConfig failed: %v", err)
 	}

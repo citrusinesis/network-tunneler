@@ -15,8 +15,10 @@ var Module = fx.Options(
 	fx.Provide(
 		ProvideConfig,
 		ProvideResponseChannel,
+
 		NewPacketForwarder,
 		NewServerConnection,
+
 		New,
 	),
 )
@@ -29,10 +31,10 @@ type ProvidedConfig struct {
 	LoggerConfig logger.Config
 }
 
-func ProvideConfig(log logger.Logger) (ProvidedConfig, error) {
+func ProvideConfig() (ProvidedConfig, error) {
 	cfg := DefaultConfig()
 
-	tlsConfig, err := LoadTLSConfig(cfg.GetTLS(), log)
+	tlsConfig, err := LoadTLSConfig(cfg.GetTLS())
 	if err != nil {
 		return ProvidedConfig{}, err
 	}

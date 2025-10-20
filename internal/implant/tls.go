@@ -7,16 +7,15 @@ import (
 	"os"
 
 	"network-tunneler/internal/config"
-	"network-tunneler/pkg/logger"
 )
 
-func LoadTLSConfig(cfg *config.TLSConfig, log logger.Logger) (*tls.Config, error) {
-	cert, err := loadCertificate(cfg, log)
+func LoadTLSConfig(cfg *config.TLSConfig) (*tls.Config, error) {
+	cert, err := loadCertificate(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	caPool, err := loadCAPool(cfg, log)
+	caPool, err := loadCAPool(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -28,12 +27,10 @@ func LoadTLSConfig(cfg *config.TLSConfig, log logger.Logger) (*tls.Config, error
 		RootCAs:      caPool,
 	}
 
-	log.Info("TLS configuration loaded")
-
 	return tlsConfig, nil
 }
 
-func loadCertificate(cfg *config.TLSConfig, log logger.Logger) (tls.Certificate, error) {
+func loadCertificate(cfg *config.TLSConfig) (tls.Certificate, error) {
 	if cfg.CertPath == "" || cfg.KeyPath == "" {
 		return tls.Certificate{}, fmt.Errorf("cert_path and key_path are required")
 	}
@@ -43,15 +40,10 @@ func loadCertificate(cfg *config.TLSConfig, log logger.Logger) (tls.Certificate,
 		return tls.Certificate{}, fmt.Errorf("failed to load certificate: %w", err)
 	}
 
-	log.Info("certificate loaded",
-		logger.String("cert_path", cfg.CertPath),
-		logger.String("key_path", cfg.KeyPath),
-	)
-
 	return cert, nil
 }
 
-func loadCAPool(cfg *config.TLSConfig, log logger.Logger) (*x509.CertPool, error) {
+func loadCAPool(cfg *config.TLSConfig) (*x509.CertPool, error) {
 	if cfg.CAPath == "" {
 		return nil, fmt.Errorf("ca_path is required")
 	}
@@ -65,10 +57,6 @@ func loadCAPool(cfg *config.TLSConfig, log logger.Logger) (*x509.CertPool, error
 	if !caPool.AppendCertsFromPEM(caPEM) {
 		return nil, fmt.Errorf("failed to parse CA certificate")
 	}
-
-	log.Info("CA certificate loaded",
-		logger.String("ca_path", cfg.CAPath),
-	)
 
 	return caPool, nil
 }
