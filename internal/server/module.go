@@ -1,49 +1,53 @@
 package server
 
 import (
+	"crypto/tls"
+
 	"go.uber.org/fx"
 
-	"network-tunneler/internal/config"
-	"network-tunneler/internal/server/handler"
 	"network-tunneler/pkg/logger"
 )
 
-var Module = fx.Options(
+var Module = fx.Module("server",
 	fx.Provide(
 		ProvideConfig,
-		ProvideTLSConfig,
 
-		NewTLSManager,
-		NewListenerManager,
 		NewRegistry,
-		NewRouter,
-
-		NewAgentHandler,
-		NewImplantHandler,
+		NewGRPCServer,
 
 		New,
 	),
-	fx.Provide(func(cfg *Config) *logger.Config {
-		return cfg.Log.ToLoggerConfig()
-	}),
-	fx.Invoke(func(*Server) {}),
 )
 
-func ProvideConfig(configFile string) (*Config, error) {
+type ProvidedConfig struct {
+	fx.Out
+
+	Config       *Config
+	TlsConfig    *tls.Config
+	LoggerConfig *logger.Config
+}
+
+func ProvideConfig(configFile string, log logger.Logger) (ProvidedConfig, error) {
+	var cfg *Config
+	var err error
+
 	if configFile == "" {
-		return DefaultConfig(), nil
+		cfg = DefaultConfig()
+	} else {
+		cfg, err = LoadConfig(configFile)
+		if err != nil {
+			return ProvidedConfig{}, err
+		}
 	}
-	return LoadConfig(configFile)
-}
 
-func ProvideTLSConfig(cfg *Config) *config.TLSConfig {
-	return &cfg.TLS
-}
+	tlsConfig, err := LoadTLSConfig(cfg.GetTLS(), log)
+	if err != nil {
+		return ProvidedConfig{}, err
+	}
 
-func NewAgentHandler(registry *Registry, router *Router, logger logger.Logger) *handler.Agent {
-	return handler.NewAgent(registry, router, logger)
-}
-
-func NewImplantHandler(registry *Registry, router *Router, logger logger.Logger) *handler.Implant {
-	return handler.NewImplant(registry, router, logger)
+	return ProvidedConfig{
+		Config:       cfg,
+		TlsConfig:    tlsConfig,
+		LoggerConfig: cfg.Log.ToLoggerConfig(),
+	}, nil
 }

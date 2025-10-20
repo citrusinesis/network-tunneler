@@ -5,45 +5,31 @@ import (
 
 	"go.uber.org/fx"
 
-	"network-tunneler/internal/server/handler"
 	"network-tunneler/pkg/logger"
 )
 
 type Server struct {
-	cfg      *Config
-	logger   logger.Logger
-	tls      *TLSManager
-	listener *ListenerManager
-	registry *Registry
-	router   *Router
-
-	agentHandler   *handler.Agent
-	implantHandler *handler.Implant
+	cfg        *Config
+	logger     logger.Logger
+	registry   *Registry
+	grpcServer *GRPCServer
 }
 
 type Params struct {
 	fx.In
 
-	Config         *Config
-	Logger         logger.Logger
-	TLS            *TLSManager
-	Listener       *ListenerManager
-	Registry       *Registry
-	Router         *Router
-	AgentHandler   *handler.Agent
-	ImplantHandler *handler.Implant
+	Config     *Config
+	Logger     logger.Logger
+	Registry   *Registry
+	GRPCServer *GRPCServer
 }
 
 func New(lc fx.Lifecycle, p Params) *Server {
 	s := &Server{
-		cfg:            p.Config,
-		logger:         p.Logger.With(logger.String("component", "server")),
-		tls:            p.TLS,
-		listener:       p.Listener,
-		registry:       p.Registry,
-		router:         p.Router,
-		agentHandler:   p.AgentHandler,
-		implantHandler: p.ImplantHandler,
+		cfg:        p.Config,
+		logger:     p.Logger.With(logger.String("component", "server")),
+		registry:   p.Registry,
+		grpcServer: p.GRPCServer,
 	}
 
 	lc.Append(fx.Hook{
@@ -58,24 +44,13 @@ func New(lc fx.Lifecycle, p Params) *Server {
 	return s
 }
 
-func (s *Server) start(_ context.Context) error {
+func (s *Server) start(ctx context.Context) error {
 	s.logger.Info("starting server",
 		logger.String("agent_addr", s.cfg.AgentListenAddr),
 		logger.String("implant_addr", s.cfg.ImplantListenAddr),
 	)
 
-	tlsConfig, err := s.tls.LoadConfig()
-	if err != nil {
-		return err
-	}
-
-	if err = s.listener.Start(
-		s.cfg.AgentListenAddr,
-		s.cfg.ImplantListenAddr,
-		tlsConfig,
-		s.agentHandler.Handle,
-		s.implantHandler.Handle,
-	); err != nil {
+	if err := s.grpcServer.Start(ctx); err != nil {
 		return err
 	}
 
@@ -86,8 +61,8 @@ func (s *Server) start(_ context.Context) error {
 func (s *Server) stop(ctx context.Context) error {
 	s.logger.Info("stopping server")
 
-	if err := s.listener.Stop(ctx); err != nil {
-		s.logger.Warn("listener stop error", logger.Error(err))
+	if err := s.grpcServer.Stop(ctx); err != nil {
+		s.logger.Warn("grpc server stop error", logger.Error(err))
 	}
 
 	if err := s.registry.Cleanup(ctx); err != nil {

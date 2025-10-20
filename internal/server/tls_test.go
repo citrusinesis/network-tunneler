@@ -11,7 +11,7 @@ import (
 	testutil "network-tunneler/internal/testing"
 )
 
-func TestTLSManager_LoadConfig_Embedded(t *testing.T) {
+func TestLoadTLSConfig_Embedded(t *testing.T) {
 	cfg := &config.TLSConfig{
 		CertPath:           "",
 		KeyPath:            "",
@@ -21,11 +21,9 @@ func TestTLSManager_LoadConfig_Embedded(t *testing.T) {
 
 	log := testutil.NewTestLogger()
 
-	mgr := NewTLSManager(cfg, log)
-
-	tlsConfig, err := mgr.LoadConfig()
+	tlsConfig, err := LoadTLSConfig(cfg, log)
 	if err != nil {
-		t.Fatalf("LoadConfig failed: %v", err)
+		t.Fatalf("LoadTLSConfig failed: %v", err)
 	}
 
 	if len(tlsConfig.Certificates) != 1 {
@@ -41,7 +39,7 @@ func TestTLSManager_LoadConfig_Embedded(t *testing.T) {
 	}
 }
 
-func TestTLSManager_LoadConfig_FromFiles(t *testing.T) {
+func TestLoadTLSConfig_FromFiles(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	certPath := filepath.Join(tmpDir, "test.crt")
@@ -67,11 +65,9 @@ func TestTLSManager_LoadConfig_FromFiles(t *testing.T) {
 
 	log := testutil.NewTestLogger()
 
-	mgr := NewTLSManager(cfg, log)
-
-	tlsConfig, err := mgr.LoadConfig()
+	tlsConfig, err := LoadTLSConfig(cfg, log)
 	if err != nil {
-		t.Fatalf("LoadConfig failed: %v", err)
+		t.Fatalf("LoadTLSConfig failed: %v", err)
 	}
 
 	if len(tlsConfig.Certificates) != 1 {

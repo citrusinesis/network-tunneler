@@ -532,6 +532,286 @@ func (x *Heartbeat) GetTimestamp() int64 {
 	return 0
 }
 
+type Envelope struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Type          MessageType            `protobuf:"varint,1,opt,name=type,proto3,enum=proto.MessageType" json:"type,omitempty"`
+	Payload       []byte                 `protobuf:"bytes,2,opt,name=payload,proto3" json:"payload,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Envelope) Reset() {
+	*x = Envelope{}
+	mi := &file_proto_packet_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Envelope) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Envelope) ProtoMessage() {}
+
+func (x *Envelope) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_packet_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Envelope.ProtoReflect.Descriptor instead.
+func (*Envelope) Descriptor() ([]byte, []int) {
+	return file_proto_packet_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *Envelope) GetType() MessageType {
+	if x != nil {
+		return x.Type
+	}
+	return MessageType_MESSAGE_TYPE_UNSPECIFIED
+}
+
+func (x *Envelope) GetPayload() []byte {
+	if x != nil {
+		return x.Payload
+	}
+	return nil
+}
+
+type AgentMessage struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Message:
+	//
+	//	*AgentMessage_Register
+	//	*AgentMessage_Packet
+	//	*AgentMessage_Heartbeat
+	//	*AgentMessage_Ack
+	Message       isAgentMessage_Message `protobuf_oneof:"message"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AgentMessage) Reset() {
+	*x = AgentMessage{}
+	mi := &file_proto_packet_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AgentMessage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AgentMessage) ProtoMessage() {}
+
+func (x *AgentMessage) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_packet_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AgentMessage.ProtoReflect.Descriptor instead.
+func (*AgentMessage) Descriptor() ([]byte, []int) {
+	return file_proto_packet_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *AgentMessage) GetMessage() isAgentMessage_Message {
+	if x != nil {
+		return x.Message
+	}
+	return nil
+}
+
+func (x *AgentMessage) GetRegister() *AgentRegister {
+	if x != nil {
+		if x, ok := x.Message.(*AgentMessage_Register); ok {
+			return x.Register
+		}
+	}
+	return nil
+}
+
+func (x *AgentMessage) GetPacket() *Packet {
+	if x != nil {
+		if x, ok := x.Message.(*AgentMessage_Packet); ok {
+			return x.Packet
+		}
+	}
+	return nil
+}
+
+func (x *AgentMessage) GetHeartbeat() *Heartbeat {
+	if x != nil {
+		if x, ok := x.Message.(*AgentMessage_Heartbeat); ok {
+			return x.Heartbeat
+		}
+	}
+	return nil
+}
+
+func (x *AgentMessage) GetAck() *RegisterAck {
+	if x != nil {
+		if x, ok := x.Message.(*AgentMessage_Ack); ok {
+			return x.Ack
+		}
+	}
+	return nil
+}
+
+type isAgentMessage_Message interface {
+	isAgentMessage_Message()
+}
+
+type AgentMessage_Register struct {
+	Register *AgentRegister `protobuf:"bytes,1,opt,name=register,proto3,oneof"`
+}
+
+type AgentMessage_Packet struct {
+	Packet *Packet `protobuf:"bytes,2,opt,name=packet,proto3,oneof"`
+}
+
+type AgentMessage_Heartbeat struct {
+	Heartbeat *Heartbeat `protobuf:"bytes,3,opt,name=heartbeat,proto3,oneof"`
+}
+
+type AgentMessage_Ack struct {
+	Ack *RegisterAck `protobuf:"bytes,4,opt,name=ack,proto3,oneof"`
+}
+
+func (*AgentMessage_Register) isAgentMessage_Message() {}
+
+func (*AgentMessage_Packet) isAgentMessage_Message() {}
+
+func (*AgentMessage_Heartbeat) isAgentMessage_Message() {}
+
+func (*AgentMessage_Ack) isAgentMessage_Message() {}
+
+type ImplantMessage struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Message:
+	//
+	//	*ImplantMessage_Register
+	//	*ImplantMessage_Packet
+	//	*ImplantMessage_Heartbeat
+	//	*ImplantMessage_Ack
+	Message       isImplantMessage_Message `protobuf_oneof:"message"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ImplantMessage) Reset() {
+	*x = ImplantMessage{}
+	mi := &file_proto_packet_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ImplantMessage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ImplantMessage) ProtoMessage() {}
+
+func (x *ImplantMessage) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_packet_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ImplantMessage.ProtoReflect.Descriptor instead.
+func (*ImplantMessage) Descriptor() ([]byte, []int) {
+	return file_proto_packet_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *ImplantMessage) GetMessage() isImplantMessage_Message {
+	if x != nil {
+		return x.Message
+	}
+	return nil
+}
+
+func (x *ImplantMessage) GetRegister() *ImplantRegister {
+	if x != nil {
+		if x, ok := x.Message.(*ImplantMessage_Register); ok {
+			return x.Register
+		}
+	}
+	return nil
+}
+
+func (x *ImplantMessage) GetPacket() *Packet {
+	if x != nil {
+		if x, ok := x.Message.(*ImplantMessage_Packet); ok {
+			return x.Packet
+		}
+	}
+	return nil
+}
+
+func (x *ImplantMessage) GetHeartbeat() *Heartbeat {
+	if x != nil {
+		if x, ok := x.Message.(*ImplantMessage_Heartbeat); ok {
+			return x.Heartbeat
+		}
+	}
+	return nil
+}
+
+func (x *ImplantMessage) GetAck() *RegisterAck {
+	if x != nil {
+		if x, ok := x.Message.(*ImplantMessage_Ack); ok {
+			return x.Ack
+		}
+	}
+	return nil
+}
+
+type isImplantMessage_Message interface {
+	isImplantMessage_Message()
+}
+
+type ImplantMessage_Register struct {
+	Register *ImplantRegister `protobuf:"bytes,1,opt,name=register,proto3,oneof"`
+}
+
+type ImplantMessage_Packet struct {
+	Packet *Packet `protobuf:"bytes,2,opt,name=packet,proto3,oneof"`
+}
+
+type ImplantMessage_Heartbeat struct {
+	Heartbeat *Heartbeat `protobuf:"bytes,3,opt,name=heartbeat,proto3,oneof"`
+}
+
+type ImplantMessage_Ack struct {
+	Ack *RegisterAck `protobuf:"bytes,4,opt,name=ack,proto3,oneof"`
+}
+
+func (*ImplantMessage_Register) isImplantMessage_Message() {}
+
+func (*ImplantMessage_Packet) isImplantMessage_Message() {}
+
+func (*ImplantMessage_Heartbeat) isImplantMessage_Message() {}
+
+func (*ImplantMessage_Ack) isImplantMessage_Message() {}
+
 var File_proto_packet_proto protoreflect.FileDescriptor
 
 const file_proto_packet_proto_rawDesc = "" +
@@ -561,7 +841,22 @@ const file_proto_packet_proto_rawDesc = "" +
 	"\amessage\x18\x02 \x01(\tR\amessage\"F\n" +
 	"\tHeartbeat\x12\x1b\n" +
 	"\tsender_id\x18\x01 \x01(\tR\bsenderId\x12\x1c\n" +
-	"\ttimestamp\x18\x02 \x01(\x03R\ttimestamp*[\n" +
+	"\ttimestamp\x18\x02 \x01(\x03R\ttimestamp\"L\n" +
+	"\bEnvelope\x12&\n" +
+	"\x04type\x18\x01 \x01(\x0e2\x12.proto.MessageTypeR\x04type\x12\x18\n" +
+	"\apayload\x18\x02 \x01(\fR\apayload\"\xd0\x01\n" +
+	"\fAgentMessage\x122\n" +
+	"\bregister\x18\x01 \x01(\v2\x14.proto.AgentRegisterH\x00R\bregister\x12'\n" +
+	"\x06packet\x18\x02 \x01(\v2\r.proto.PacketH\x00R\x06packet\x120\n" +
+	"\theartbeat\x18\x03 \x01(\v2\x10.proto.HeartbeatH\x00R\theartbeat\x12&\n" +
+	"\x03ack\x18\x04 \x01(\v2\x12.proto.RegisterAckH\x00R\x03ackB\t\n" +
+	"\amessage\"\xd4\x01\n" +
+	"\x0eImplantMessage\x124\n" +
+	"\bregister\x18\x01 \x01(\v2\x16.proto.ImplantRegisterH\x00R\bregister\x12'\n" +
+	"\x06packet\x18\x02 \x01(\v2\r.proto.PacketH\x00R\x06packet\x120\n" +
+	"\theartbeat\x18\x03 \x01(\v2\x10.proto.HeartbeatH\x00R\theartbeat\x12&\n" +
+	"\x03ack\x18\x04 \x01(\v2\x12.proto.RegisterAckH\x00R\x03ackB\t\n" +
+	"\amessage*[\n" +
 	"\bProtocol\x12\x18\n" +
 	"\x14PROTOCOL_UNSPECIFIED\x10\x00\x12\x11\n" +
 	"\rPROTOCOL_ICMP\x10\x01\x12\x10\n" +
@@ -578,7 +873,11 @@ const file_proto_packet_proto_rawDesc = "" +
 	"\fREGISTER_ACK\x10\x03\x12\n" +
 	"\n" +
 	"\x06PACKET\x10\x04\x12\r\n" +
-	"\tHEARTBEAT\x10\x05B\x18Z\x16network-tunneler/protob\x06proto3"
+	"\tHEARTBEAT\x10\x052F\n" +
+	"\vTunnelAgent\x127\n" +
+	"\aConnect\x12\x13.proto.AgentMessage\x1a\x13.proto.AgentMessage(\x010\x012L\n" +
+	"\rTunnelImplant\x12;\n" +
+	"\aConnect\x12\x15.proto.ImplantMessage\x1a\x15.proto.ImplantMessage(\x010\x01B\x18Z\x16network-tunneler/protob\x06proto3"
 
 var (
 	file_proto_packet_proto_rawDescOnce sync.Once
@@ -593,7 +892,7 @@ func file_proto_packet_proto_rawDescGZIP() []byte {
 }
 
 var file_proto_packet_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_proto_packet_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_proto_packet_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_proto_packet_proto_goTypes = []any{
 	(Protocol)(0),           // 0: proto.Protocol
 	(Direction)(0),          // 1: proto.Direction
@@ -604,16 +903,32 @@ var file_proto_packet_proto_goTypes = []any{
 	(*ImplantRegister)(nil), // 6: proto.ImplantRegister
 	(*RegisterAck)(nil),     // 7: proto.RegisterAck
 	(*Heartbeat)(nil),       // 8: proto.Heartbeat
+	(*Envelope)(nil),        // 9: proto.Envelope
+	(*AgentMessage)(nil),    // 10: proto.AgentMessage
+	(*ImplantMessage)(nil),  // 11: proto.ImplantMessage
 }
 var file_proto_packet_proto_depIdxs = []int32{
-	3, // 0: proto.Packet.conn_tuple:type_name -> proto.ConnectionTuple
-	0, // 1: proto.Packet.protocol:type_name -> proto.Protocol
-	1, // 2: proto.Packet.direction:type_name -> proto.Direction
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	3,  // 0: proto.Packet.conn_tuple:type_name -> proto.ConnectionTuple
+	0,  // 1: proto.Packet.protocol:type_name -> proto.Protocol
+	1,  // 2: proto.Packet.direction:type_name -> proto.Direction
+	2,  // 3: proto.Envelope.type:type_name -> proto.MessageType
+	5,  // 4: proto.AgentMessage.register:type_name -> proto.AgentRegister
+	4,  // 5: proto.AgentMessage.packet:type_name -> proto.Packet
+	8,  // 6: proto.AgentMessage.heartbeat:type_name -> proto.Heartbeat
+	7,  // 7: proto.AgentMessage.ack:type_name -> proto.RegisterAck
+	6,  // 8: proto.ImplantMessage.register:type_name -> proto.ImplantRegister
+	4,  // 9: proto.ImplantMessage.packet:type_name -> proto.Packet
+	8,  // 10: proto.ImplantMessage.heartbeat:type_name -> proto.Heartbeat
+	7,  // 11: proto.ImplantMessage.ack:type_name -> proto.RegisterAck
+	10, // 12: proto.TunnelAgent.Connect:input_type -> proto.AgentMessage
+	11, // 13: proto.TunnelImplant.Connect:input_type -> proto.ImplantMessage
+	10, // 14: proto.TunnelAgent.Connect:output_type -> proto.AgentMessage
+	11, // 15: proto.TunnelImplant.Connect:output_type -> proto.ImplantMessage
+	14, // [14:16] is the sub-list for method output_type
+	12, // [12:14] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_proto_packet_proto_init() }
@@ -621,15 +936,27 @@ func file_proto_packet_proto_init() {
 	if File_proto_packet_proto != nil {
 		return
 	}
+	file_proto_packet_proto_msgTypes[7].OneofWrappers = []any{
+		(*AgentMessage_Register)(nil),
+		(*AgentMessage_Packet)(nil),
+		(*AgentMessage_Heartbeat)(nil),
+		(*AgentMessage_Ack)(nil),
+	}
+	file_proto_packet_proto_msgTypes[8].OneofWrappers = []any{
+		(*ImplantMessage_Register)(nil),
+		(*ImplantMessage_Packet)(nil),
+		(*ImplantMessage_Heartbeat)(nil),
+		(*ImplantMessage_Ack)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_packet_proto_rawDesc), len(file_proto_packet_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   6,
+			NumMessages:   9,
 			NumExtensions: 0,
-			NumServices:   0,
+			NumServices:   2,
 		},
 		GoTypes:           file_proto_packet_proto_goTypes,
 		DependencyIndexes: file_proto_packet_proto_depIdxs,

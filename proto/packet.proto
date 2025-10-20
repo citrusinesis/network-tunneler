@@ -62,3 +62,34 @@ message Heartbeat {
   string sender_id = 1;
   int64 timestamp = 2;
 }
+
+message Envelope {
+  MessageType type = 1;
+  bytes payload = 2;
+}
+
+service TunnelAgent {
+  rpc Connect(stream AgentMessage) returns (stream AgentMessage);
+}
+
+service TunnelImplant {
+  rpc Connect(stream ImplantMessage) returns (stream ImplantMessage);
+}
+
+message AgentMessage {
+  oneof message {
+    AgentRegister register = 1;
+    Packet packet = 2;
+    Heartbeat heartbeat = 3;
+    RegisterAck ack = 4;
+  }
+}
+
+message ImplantMessage {
+  oneof message {
+    ImplantRegister register = 1;
+    Packet packet = 2;
+    Heartbeat heartbeat = 3;
+    RegisterAck ack = 4;
+  }
+}

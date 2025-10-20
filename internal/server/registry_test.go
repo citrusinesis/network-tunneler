@@ -2,20 +2,30 @@ package server
 
 import (
 	"context"
-	testutil "network-tunneler/internal/testing"
 	"testing"
 	"time"
+
+	testutil "network-tunneler/internal/testing"
+	pb "network-tunneler/proto"
 )
 
-func TestRegistry_RegisterAgent(t *testing.T) {
+type mockAgentStream struct {
+	pb.TunnelAgent_ConnectServer
+}
+
+type mockImplantStream struct {
+	pb.TunnelImplant_ConnectServer
+}
+
+func TestRegistry_RegisterAgentStream(t *testing.T) {
 	log := testutil.NewTestLogger()
 
 	registry := NewRegistry(log)
-	conn := testutil.NewMockConn()
+	stream := &mockAgentStream{}
 
-	err := registry.RegisterAgent("agent-1", conn)
+	err := registry.RegisterAgentStream("agent-1", stream)
 	if err != nil {
-		t.Fatalf("RegisterAgent failed: %v", err)
+		t.Fatalf("RegisterAgentStream failed: %v", err)
 	}
 
 	agent, exists := registry.GetAgent("agent-1")
@@ -27,23 +37,23 @@ func TestRegistry_RegisterAgent(t *testing.T) {
 		t.Errorf("expected agent ID 'agent-1', got %s", agent.ID)
 	}
 
-	if agent.Conn != conn {
-		t.Error("expected agent connection to match")
+	if agent.Stream != stream {
+		t.Error("expected agent stream to match")
 	}
 }
 
-func TestRegistry_RegisterAgent_Duplicate(t *testing.T) {
+func TestRegistry_RegisterAgentStream_Duplicate(t *testing.T) {
 	log := testutil.NewTestLogger()
 
 	registry := NewRegistry(log)
-	conn := testutil.NewMockConn()
+	stream := &mockAgentStream{}
 
-	err := registry.RegisterAgent("agent-1", conn)
+	err := registry.RegisterAgentStream("agent-1", stream)
 	if err != nil {
-		t.Fatalf("RegisterAgent failed: %v", err)
+		t.Fatalf("RegisterAgentStream failed: %v", err)
 	}
 
-	err = registry.RegisterAgent("agent-1", conn)
+	err = registry.RegisterAgentStream("agent-1", stream)
 	if err == nil {
 		t.Error("expected error for duplicate agent registration")
 	}
@@ -53,9 +63,9 @@ func TestRegistry_UnregisterAgent(t *testing.T) {
 	log := testutil.NewTestLogger()
 
 	registry := NewRegistry(log)
-	conn := testutil.NewMockConn()
+	stream := &mockAgentStream{}
 
-	registry.RegisterAgent("agent-1", conn)
+	registry.RegisterAgentStream("agent-1", stream)
 	registry.UnregisterAgent("agent-1")
 
 	_, exists := registry.GetAgent("agent-1")
@@ -64,15 +74,15 @@ func TestRegistry_UnregisterAgent(t *testing.T) {
 	}
 }
 
-func TestRegistry_RegisterImplant(t *testing.T) {
+func TestRegistry_RegisterImplantStream(t *testing.T) {
 	log := testutil.NewTestLogger()
 
 	registry := NewRegistry(log)
-	conn := testutil.NewMockConn()
+	stream := &mockImplantStream{}
 
-	err := registry.RegisterImplant("implant-1", conn, "192.168.1.0/24")
+	err := registry.RegisterImplantStream("implant-1", stream, "192.168.1.0/24")
 	if err != nil {
-		t.Fatalf("RegisterImplant failed: %v", err)
+		t.Fatalf("RegisterImplantStream failed: %v", err)
 	}
 
 	implant, exists := registry.GetImplant("implant-1")
@@ -89,13 +99,36 @@ func TestRegistry_RegisterImplant(t *testing.T) {
 	}
 }
 
+func TestRegistry_FindImplantByCIDR(t *testing.T) {
+	log := testutil.NewTestLogger()
+
+	registry := NewRegistry(log)
+	stream := &mockImplantStream{}
+
+	registry.RegisterImplantStream("implant-1", stream, "192.168.1.0/24")
+
+	implant, found := registry.FindImplantByCIDR("192.168.1.100")
+	if !found {
+		t.Fatal("expected to find implant for IP in CIDR range")
+	}
+
+	if implant.ID != "implant-1" {
+		t.Errorf("expected implant-1, got %s", implant.ID)
+	}
+
+	_, found = registry.FindImplantByCIDR("10.0.0.1")
+	if found {
+		t.Error("expected not to find implant for IP outside CIDR range")
+	}
+}
+
 func TestRegistry_Cleanup(t *testing.T) {
 	log := testutil.NewTestLogger()
 
 	registry := NewRegistry(log)
 
-	registry.RegisterAgent("agent-1", testutil.NewMockConn())
-	registry.RegisterImplant("implant-1", testutil.NewMockConn(), "192.168.1.0/24")
+	registry.RegisterAgentStream("agent-1", &mockAgentStream{})
+	registry.RegisterImplantStream("implant-1", &mockImplantStream{}, "192.168.1.0/24")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

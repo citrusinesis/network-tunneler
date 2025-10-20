@@ -38,14 +38,16 @@ func run(cmd *cobra.Command, args []string) {
 	app := fx.New(
 		fx.Supply(configFile),
 		fx.Decorate(applyTLSOverrides),
+
 		logger.Module,
 		server.Module,
+
+		fx.Invoke(func(*server.Server) {}),
 	)
 
 	app.Run()
 }
 
-// applyTLSOverrides applies CLI flag overrides to the server config
 func applyTLSOverrides(cfg *server.Config) *server.Config {
 	if certPath != "" {
 		cfg.TLS.CertPath = certPath
