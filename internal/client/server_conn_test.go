@@ -73,7 +73,7 @@ func setupMockServer(t *testing.T) (*grpc.Server, string, *mockClientServer) {
 
 func newTestServerConnection(addr string, tracker *ConnectionTracker, log logger.Logger) *ServerConnection {
 	cfg := &Config{
-		ClientID:    "",
+		ClientID:   "",
 		ServerAddr: addr,
 	}
 	return &ServerConnection{
@@ -110,8 +110,15 @@ func TestServerConnection_Connect(t *testing.T) {
 		if !strings.HasPrefix(reg.ClientId, "client-") {
 			t.Errorf("expected client_id to have prefix 'client-', got %s", reg.ClientId)
 		}
-		if len(reg.ClientId) != 22 {
-			t.Errorf("expected client_id length 22, got %d", len(reg.ClientId))
+		if len(reg.ClientId) != 23 {
+			t.Errorf("expected client_id length 23, got %d", len(reg.ClientId))
+		}
+		idPart := reg.ClientId[7:]
+		for _, ch := range idPart {
+			if !((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9')) {
+				t.Errorf("expected client_id to contain only alphanumeric characters, got %s", reg.ClientId)
+				break
+			}
 		}
 	case <-time.After(2 * time.Second):
 		t.Fatal("timeout waiting for registration")

@@ -4,9 +4,9 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/tls"
-	"encoding/hex"
 	"fmt"
 	"io"
+	"math/big"
 	"sync"
 	"time"
 
@@ -26,7 +26,7 @@ type ServerConnection struct {
 	logger       logger.Logger
 	grpcInsecure bool
 	config       *Config
-	clientID      string
+	clientID     string
 
 	grpcConn   *grpc.ClientConn
 	grpcClient pb.TunnelClientClient
@@ -105,11 +105,7 @@ func (sc *ServerConnection) Connect(ctx context.Context) error {
 func (sc *ServerConnection) register() error {
 	clientID := sc.config.ClientID
 	if clientID == "" {
-		b := make([]byte, 8)
-		if _, err := rand.Read(b); err != nil {
-			return fmt.Errorf("failed to generate client ID: %w", err)
-		}
-		clientID = fmt.Sprintf("client-%s", hex.EncodeToString(b))
+		clientID = fmt.Sprintf("client-%s", generateAlphanumericID(16))
 		sc.clientID = clientID
 	} else {
 		sc.clientID = clientID
@@ -240,6 +236,21 @@ func (sc *ServerConnection) SendPacket(pkt *pb.Packet) {
 			logger.String("connection_id", pkt.ConnectionId),
 		)
 	}
+}
+
+func generateAlphanumericID(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	charsetLen := big.NewInt(int64(len(charset)))
+	result := make([]byte, length)
+
+	for i := range result {
+		n, err := rand.Int(rand.Reader, charsetLen)
+		if err != nil {
+			panic(fmt.Sprintf("failed to generate random number: %v", err))
+		}
+		result[i] = charset[n.Int64()]
+	}
+	return string(result)
 }
 
 func (sc *ServerConnection) Close() error {
